@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const bookSchema = new mongoose.Schema({
     isbn: {
-        type: String, // ISBN generalmente es una cadena de texto
+        type: String,
         required: true
     },
     title: {
@@ -11,6 +11,10 @@ const bookSchema = new mongoose.Schema({
     },
     author: {
         type: String,
+        required: true
+    },
+    publicationYear: {
+        type: Number,
         required: true
     },
     description: {

@@ -2,12 +2,14 @@ var express = require('express');
 var router = express.Router();
 var Book = require('../models/book');
 
+
 /* GET Book Search Method */
 router.get('/', async (req, res) => {
   try {
     const filtersMap = {
       title: (value) => ({ title: { $regex: value, $options: 'i' } }),
       author: (value) => ({ author: { $regex: value, $options: 'i' } }),
+      publicationYear: (value) => ({ publicationYear: parseInt(value, 10) }),
       category: (value) => ({ categories: value }),
       language: (value) => ({ language: { $regex: `^${value}$`, $options: 'i' } }),
       format: (value) => ({ formats: value })
