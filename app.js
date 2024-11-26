@@ -6,7 +6,7 @@ require('dotenv').config();
 // Mongo DB
 const mongoose = require('mongoose');
  
-var catalogueRouter = require('./routes/catalogue');
+var catalogueRouter = require('./routes/books');
  
 var app = express();
  
@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
  
-app.use('/api/v1/catalogue', catalogueRouter);
+app.use('/api/v1/books', catalogueRouter);
  
 //Mongo DB setup
 mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/?retryWrites=true&w=majority&appName=${process.env.MONGO_DATABASE}`);
