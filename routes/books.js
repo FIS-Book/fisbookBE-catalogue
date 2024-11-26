@@ -4,7 +4,6 @@ var Book = require('../models/book');
 
 
 /* GET a book by isbn */
-
 router.get('/:isbn', async(req, res) => {
   let { isbn } = req.params;
 
@@ -29,7 +28,6 @@ router.get('/:isbn', async(req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 
 /* GET Book Search Method */

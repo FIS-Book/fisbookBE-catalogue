@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const bookSchema = new mongoose.Schema({
     isbn: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
+        match: /^(?:\d{9}X|\d{10}|\d{13})$/
     },
     title: {
         type: String,
@@ -57,6 +59,12 @@ const bookSchema = new mongoose.Schema({
     }
 });
 
-const Book = mongoose.model('Book', bookSchema);
 
+bookSchema.statics.validateISBNFormat = function (isbn) {
+    const isbnRegex = /^(?:\d{9}X|\d{10}|\d{13})$/;
+    return isbnRegex.test(isbn);
+}
+ 
+bookSchema.index({ isbn: 1 });
+const Book = mongoose.model('Book', bookSchema);
 module.exports = Book;
