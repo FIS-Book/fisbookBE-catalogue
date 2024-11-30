@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var openlibrary = require('../services/openlibraryservice');
 var Book = require('../models/book');
 
 
@@ -73,23 +74,27 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
 
   try {
-    const book = new Book(req.body);
+    const coverImage = await openlibrary.getCoverUrl(req.body.isbn);
+    const book = new Book({
+      ...req.body,
+      "coverImage": coverImage
+    });
     await book.save();
     return res.status(201).json({ message: 'Book created successfully', book });
 
-  }  catch (error) {
+  } catch (error) {
     if (error.name === 'ValidationError') {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
     }
     if (error.statusCode === 400) {
       return res.status(400).json({ error: error.message });
     }
     if (error.code === 11000) {
-        return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
+      return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
     console.error('Error creating book:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
-}
+  }
 
 });
 

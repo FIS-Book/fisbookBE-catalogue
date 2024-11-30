@@ -84,6 +84,10 @@ const bookSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: [0, 'The number of reading lists cannot be negative.'],
+    },
+    coverImage: {
+        type: String,
+        default: null
     }
 });
 
