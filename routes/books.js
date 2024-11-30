@@ -4,7 +4,7 @@ var Book = require('../models/book');
 
 
 /* GET a book by isbn */
-router.get('/:isbn', async(req, res) => {
+router.get('/:isbn', async (req, res) => {
   let { isbn } = req.params;
 
   isbn = isbn.replace(/[-\s]/g, '');
@@ -15,11 +15,11 @@ router.get('/:isbn', async(req, res) => {
   }
 
   try {
-    const book = await Book.findOne({isbn});
+    const book = await Book.findOne({ isbn });
     console.log(book);
 
     if (book) {
-      res.json(book); 
+      res.json(book);
     } else {
       res.status(404).json({ error: 'Book Not Found' });
     }
@@ -66,6 +66,31 @@ router.get('/', async (req, res) => {
     console.error('Error searching for books:', error);
     res.status(500).json({ message: 'There was an error performing the search.', error });
   }
+});
+
+// Admin methods
+// POST
+router.post('/', async (req, res) => {
+
+  try {
+    const book = new Book(req.body);
+    await book.save();
+    return res.status(201).json({ message: 'Book created successfully', book });
+
+  }  catch (error) {
+    if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    if (error.statusCode === 400) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.code === 11000) {
+        return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
+    }
+    console.error('Error creating book:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+}
+
 });
 
 module.exports = router;
