@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
       publicationYear: (value) => ({ publicationYear: parseInt(value, 10) }),
       category: (value) => ({ categories: value }),
       language: (value) => ({ language: { $regex: `^${value}$`, $options: 'i' } }),
-      format: (value) => ({ formats: value })
+      featuredType: (value) => ({ featuredType: value })
     };
 
     const validKeys = Object.keys(filtersMap);

@@ -50,11 +50,19 @@ const bookSchema = new mongoose.Schema({
         type: [String],
         required: true,
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 return value.length > 0;
             },
             message: 'The book must have at least one category.'
         }
+    },
+    featuredType: {
+        type: String,
+        enum: {
+            values: ['none', 'bestSeller', 'awardWinner'],
+            message: 'Invalid value for featuredType. It must be one of: none, bestSeller, awardWinner.'
+        },
+        default: 'none'
     },
     downloadCount: {
         type: Number,
@@ -76,12 +84,6 @@ const bookSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: [0, 'The number of reading lists cannot be negative.'],
-    },
-    formats: {
-        type: [String],
-        required: true,
-        enum: ['PDF', 'EPUB'],
-        message: 'The format must be one of the following: PDF, EPUB'
     }
 });
 
@@ -106,5 +108,6 @@ bookSchema.statics.validateISBNFormat = function (isbn) {
 }
  
 bookSchema.index({ isbn: 1 });
+bookSchema.index({ featuredType: 1 });
 const Book = mongoose.model('Book', bookSchema);
 module.exports = Book;
