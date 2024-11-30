@@ -91,13 +91,11 @@ const bookSchema = new mongoose.Schema({
     }
 });
 
+// Pre-save middleware to validate certain fields
 bookSchema.pre('save', function(next) {
     if(this.isNew){
-        if (this.downloadCount !== 0 || 
-            this.totalRating !== 0 || 
-            this.totalReviews !== 0 || 
-            this.inReadingLists !== 0) {
-    
+        const invalidFields = ['downloadCount', 'totalRating', 'totalReviews', 'inReadingLists'].some(field => this[field] !== 0);
+        if (invalidFields) {
             const err = new Error('The fields downloadCount, totalRating, totalReviews, and inReadingLists should not be included in the request.');
             err.statusCode = 400;
             return next(err);
@@ -111,7 +109,11 @@ bookSchema.statics.validateISBNFormat = function (isbn) {
     return isbnRegex.test(isbn);
 }
  
+// Indexing
 bookSchema.index({ isbn: 1 });
 bookSchema.index({ featuredType: 1 });
+
+// Model definition
 const Book = mongoose.model('Book', bookSchema);
+
 module.exports = Book;
