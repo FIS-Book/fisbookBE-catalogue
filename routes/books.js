@@ -118,4 +118,42 @@ router.delete('/:isbn', async (req, res) => {
   }
 });
 
+//PUT
+router.put('/:isbn', async (req, res) => {
+  try {
+    let { isbn } = req.params;
+    isbn = isbn.replace(/[-\s]/g, '');
+
+    if (!Book.validateISBNFormat(isbn)) {
+      return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
+    const book = await Book.findOneAndUpdate(
+      { isbn },
+      { ...req.body },
+      { 
+        // Returns the updated document instead of the original.
+        new: true, 
+        // Runs validation checks defined in the schema before saving the data.
+        runValidators: true 
+      }
+    );
+
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found for updating.' });
+    }
+
+    res.json({ message: 'Book updated successfully', book });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
+    }
+    if (error.statusCode === 400) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Error updating book:', error);
+    return res.status(500).json({ error: 'Unexpected server error occurred.' });
+  }
+});
+
 module.exports = router;
