@@ -95,4 +95,27 @@ router.post('/', async (req, res) => {
 
 });
 
+// DELETE
+router.delete('/:isbn', async (req, res) => {
+  try {
+    let { isbn } = req.params;
+    isbn = isbn.replace(/[-\s]/g, '');
+
+    if (!Book.validateISBNFormat(isbn)) {
+      return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
+    const book = await Book.findOneAndDelete({ isbn });
+
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found for deletion.' });
+    }
+
+    res.json({ message: 'Book deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting book:', error);
+    return res.status(500).json({ error: 'Unexpected server error occurred.' });
+  }
+});
+
 module.exports = router;
