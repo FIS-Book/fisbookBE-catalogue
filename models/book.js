@@ -5,13 +5,7 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        match:  [/^(?:\d{9}X|\d{10}|\d{13})$/, 'Invalid ISBN format'],
-        validate: {
-            validator: function(value) {
-                return value.length === 10 || value.length === 13;
-            },
-            message: 'The ISBN must have 10 or 13 characters.'
-        }
+        match:  [/^(?:\d{9}X|\d{10}|\d{13})$/, 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.']
     },
     title: {
         type: String,

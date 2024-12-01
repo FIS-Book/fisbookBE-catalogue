@@ -6,27 +6,24 @@ var Book = require('../models/book');
 
 /* GET a book by isbn */
 router.get('/:isbn', async (req, res) => {
-  let { isbn } = req.params;
-
-  isbn = isbn.replace(/[-\s]/g, '');
-  console.log(`Searching for ISBN: ${isbn}`);
-
-  if (!Book.validateISBNFormat(isbn)) {
-    return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
-  }
-
   try {
+    let { isbn } = req.params;
+    isbn = isbn.replace(/[-\s]/g, '');
+
+    if (!Book.validateISBNFormat(isbn)) {
+      return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
     const book = await Book.findOne({ isbn });
-    console.log(book);
 
     if (book) {
-      res.json(book);
-    } else {
-      res.status(404).json({ error: 'Book Not Found' });
+      return res.json(book);
     }
+    return res.status(404).json({ error: 'Book not found' });
+    
   } catch (error) {
     console.error('Error when searching for book:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Unexpected server error occurred.' });
   }
 });
 
@@ -48,7 +45,7 @@ router.get('/', async (req, res) => {
 
     if (invalidKeys.length > 0) {
       return res.status(400).json({
-        message: 'Bad Request: Invalid query parameters provided.',
+        message: 'Invalid query parameters provided.',
         invalidParameters: invalidKeys
       });
     }
@@ -59,13 +56,13 @@ router.get('/', async (req, res) => {
     const books = await Book.find(query);
 
     if (books.length === 0) {
-      return res.status(404).json({ message: 'No books found with the given search criteria.' });
+      return res.status(404).json({ message: 'No results found for the given search criteria.' });
     }
 
-    res.status(200).json(books);
+    res.json(books);
   } catch (error) {
     console.error('Error searching for books:', error);
-    res.status(500).json({ message: 'There was an error performing the search.', error });
+    return res.status(500).json({ message: 'Unexpected error while performing search.', error });
   }
 });
 
@@ -84,7 +81,7 @@ router.post('/', async (req, res) => {
 
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
     }
     if (error.statusCode === 400) {
       return res.status(400).json({ error: error.message });
@@ -93,7 +90,7 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
     console.error('Error creating book:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Unexpected server error occurred.' });
   }
 
 });
