@@ -5,7 +5,7 @@ var Book = require('../models/book');
 
 
 /* GET a book by isbn */
-router.get('/:isbn', async (req, res) => {
+router.get('/isbn/:isbn', async (req, res) => {
   try {
     let { isbn } = req.params;
     isbn = isbn.replace(/[-\s]/g, '');
@@ -20,7 +20,7 @@ router.get('/:isbn', async (req, res) => {
       return res.json(book);
     }
     return res.status(404).json({ error: 'Book not found' });
-    
+
   } catch (error) {
     console.error('Error when searching for book:', error);
     return res.status(500).json({ error: 'Unexpected server error occurred.' });
@@ -65,6 +65,24 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ message: 'Unexpected error while performing search.', error });
   }
 });
+
+/* GET Recommended Books Method*/
+router.get('/featured', async (req, res) => {
+  try {
+    const books = await Book.find({ featuredType: { $ne: 'none' } });
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: 'No featured books found.' });
+    }
+
+    res.json(books);
+  } catch (error) {
+    console.error('Error fetching featured books:', error);
+    return res.status(500).json({ message: 'Unexpected error while fetching featured books.', error });
+
+  }
+});
+
 
 // Admin methods
 // POST
@@ -131,11 +149,11 @@ router.put('/:isbn', async (req, res) => {
     const book = await Book.findOneAndUpdate(
       { isbn },
       { ...req.body },
-      { 
+      {
         // Returns the updated document instead of the original.
-        new: true, 
+        new: true,
         // Runs validation checks defined in the schema before saving the data.
-        runValidators: true 
+        runValidators: true
       }
     );
 
