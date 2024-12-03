@@ -19,6 +19,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError) {
+    console.error('Error Invalid JSON format:', err.message);
+    return res.status(400).json({ 
+      error: 'Invalid JSON format', 
+      message: err.message 
+    });
+  }
+  next(err);
+});
+
 app.use('/api/v1/books', catalogueRouter);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
