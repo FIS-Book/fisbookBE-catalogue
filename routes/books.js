@@ -5,7 +5,7 @@ var Book = require('../models/book');
 
 
 /* GET a book by isbn */
-router.get('/isbn/:isbn', async (req, res) => {
+router.get('/isbn/isbn/:isbn', async (req, res) => {
   try {
     let { isbn } = req.params;
     isbn = isbn.replace(/[-\s]/g, '');
@@ -80,6 +80,62 @@ router.get('/featured', async (req, res) => {
     console.error('Error fetching featured books:', error);
     return res.status(500).json({ message: 'Unexpected error while fetching featured books.', error });
 
+  }
+});
+
+
+
+/* GET Latest Published Books Method */
+router.get('/latest', async (req, res) => {
+  try {
+    const latestBooks = await Book.find({})
+      .sort({ publicationYear: -1 })
+      .limit(10);
+
+    if (latestBooks.length === 0) {
+      return res.status(404).json({ message: 'No books found.' });
+    }
+
+    res.json(latestBooks);
+  } catch (error) {
+    console.error('Error fetching latest books:', error);
+    return res.status(500).json({ message: 'Internal server error. Please try again later.' });
+  }
+});
+
+
+
+/* GET Statistics From Books Method */
+router.get('/stats', async (req, res) => {
+  try {
+    const totalBooks = await Book.countDocuments();
+    const authors = await Book.distinct('author');
+    const mostPopularGenre = await Book.aggregate([
+      { $unwind: '$categories' },
+      { $group: { _id: '$categories', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 }
+    ]);
+
+    const mostProlificAuthor = await Book.aggregate([
+      { $group: { _id: '$author', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 }
+    ]);
+
+
+    const stats = {
+      totalBooks,
+      authors: authors.length,
+      mostPopularGenre: mostPopularGenre.length ? mostPopularGenre[0]._id : null,
+      mostProlificAuthor: mostProlificAuthor.length ? mostProlificAuthor[0]._id : null,
+    };
+
+
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return res.status(500).json({ success: false, message: 'Error fetching book stats.', error });
   }
 });
 
