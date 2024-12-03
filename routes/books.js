@@ -20,7 +20,7 @@ router.get('/isbn/:isbn', async (req, res) => {
       return res.json(book);
     }
     return res.status(404).json({ error: 'Book not found' });
-    
+
   } catch (error) {
     console.error('Error when searching for book:', error);
     return res.status(500).json({ error: 'Unexpected server error occurred.' });
@@ -65,6 +65,26 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ message: 'Unexpected error while performing search.', error });
   }
 });
+
+
+/* GET Latest Published Books Method */
+router.get('/latest', async (req, res) => {
+  try {
+    const latestBooks = await Book.find({})
+      .sort({ publicationYear: -1 })
+      .limit(10);
+
+    if (latestBooks.length === 0) {
+      return res.status(404).json({ message: 'No books found.' });
+    }
+
+    res.json(latestBooks);
+  } catch (error) {
+    console.error('Error fetching latest books:', error);
+    return res.status(500).json({ message: 'Internal server error. Please try again later.' });
+  }
+});
+
 
 
 /* GET Statistics From Books Method */
@@ -167,11 +187,11 @@ router.put('/:isbn', async (req, res) => {
     const book = await Book.findOneAndUpdate(
       { isbn },
       { ...req.body },
-      { 
+      {
         // Returns the updated document instead of the original.
-        new: true, 
+        new: true,
         // Runs validation checks defined in the schema before saving the data.
-        runValidators: true 
+        runValidators: true
       }
     );
 
