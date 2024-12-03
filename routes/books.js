@@ -6,7 +6,6 @@ var Book = require('../models/book');
 
 /* GET a book by isbn */
 router.get('/isbn/:isbn', async (req, res) => {
-router.get('/isbn/:isbn', async (req, res) => {
   try {
     let { isbn } = req.params;
     isbn = isbn.replace(/[-\s]/g, '');
