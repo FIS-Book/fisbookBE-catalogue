@@ -222,6 +222,41 @@ router.patch('/:isbn/readingLists', async (req, res) => {
   }
 });
 
+// PATCH: Update totalRating and totalReviews
+router.patch('/:isbn/review', async (req, res) => {
+  const { isbn } = req.params;
+  const { score } = req.body;
+
+  if (typeof score !== 'number' || score < 0 || score > 5) {
+      return res.status(400).json({ message: 'Invalid score. The score must be a number between 0 and 5.' });
+  }
+
+  try {
+      const book = await Book.findOne({ isbn });
+      if (!book) {
+          return res.status(404).json({ message: 'Book not found.' });
+      }
+
+    const updatedTotalReviews = book.totalReviews + 1;
+    const updatedTotalRating = ((book.totalRating * book.totalReviews) + score) / updatedTotalReviews;
+
+    book.totalReviews = updatedTotalReviews;
+    book.totalRating = updatedTotalRating;
+      await book.save();
+
+      res.status(200).json({
+          message: 'Review added successfully.',
+          bookReview: {
+              isbn: book.isbn,
+              totalRating: book.totalRating,
+              totalReviews: book.totalReviews,
+          }
+      });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'An error occurred while updating the review.', error: error.message });
+  }
+});
 
 // Admin methods
 // POST
