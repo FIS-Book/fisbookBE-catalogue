@@ -5,7 +5,7 @@ var Book = require('../models/book');
 
 
 /* GET a book by isbn */
-router.get('/isbn/isbn/:isbn', async (req, res) => {
+router.get('/isbn/:isbn', async (req, res) => {
   try {
     let { isbn } = req.params;
     isbn = isbn.replace(/[-\s]/g, '');
@@ -66,6 +66,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 /* GET Recommended Books Method*/
 router.get('/featured', async (req, res) => {
   try {
@@ -82,7 +83,6 @@ router.get('/featured', async (req, res) => {
 
   }
 });
-
 
 
 /* GET Latest Published Books Method */
@@ -102,7 +102,6 @@ router.get('/latest', async (req, res) => {
     return res.status(500).json({ message: 'Internal server error. Please try again later.' });
   }
 });
-
 
 
 /* GET Statistics From Books Method */
@@ -136,6 +135,90 @@ router.get('/stats', async (req, res) => {
   } catch (error) {
     console.error('Error fetching stats:', error);
     return res.status(500).json({ success: false, message: 'Error fetching book stats.', error });
+  }
+});
+
+
+/* PATCH Download Count Method */
+router.patch('/:isbn/downloads', async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    const { downloadCount } = req.body;
+    const normalizedISBN = isbn.replace(/[-\s]/g, '');
+
+    if (!Book.validateISBNFormat(normalizedISBN)) {
+      return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
+    if (typeof downloadCount === 'undefined') {
+      return res.status(400).json({ error: "'downloadCount' is required." });
+    }
+
+    const updatedBook = await Book.findOneAndUpdate(
+      { isbn: normalizedISBN },
+      { $set: { downloadCount } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedBook) {
+      return res.status(404).json({ error: 'Book not found.' });
+    }
+
+    res.json({
+      message: 'Book download count updated successfully.',
+      book: updatedBook,
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
+    }
+    console.error('Error updating download count:', error);
+    return res.status(500).json({
+      error: 'Unexpected error while updating download count.',
+      details: error.message,
+    });
+  }
+});
+
+
+/* PATCH Reviews List Method */
+router.patch('/:isbn/reviews', async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    const { totalReviews } = req.body;
+    const normalizedISBN = isbn.replace(/[-\s]/g, '');
+
+    if (!Book.validateISBNFormat(normalizedISBN)) {
+      return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
+    if (typeof totalReviews === 'undefined') {
+      return res.status(400).json({ error: "'totalReviews' is required." });
+    }
+
+    const updatedBook = await Book.findOneAndUpdate(
+      { isbn: normalizedISBN },
+      { $set: { totalReviews } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedBook) {
+      return res.status(404).json({ error: 'Book not found.' });
+    }
+
+    res.json({
+      message: 'Book total reviews updated successfully.',
+      book: updatedBook,
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
+    }
+    console.error('Error updating total reviews:', error);
+    return res.status(500).json({
+      error: 'Unexpected error while updating total reviews.',
+      details: error.message,
+    });
   }
 });
 
