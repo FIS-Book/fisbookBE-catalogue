@@ -13,8 +13,7 @@ COPY public/ ./public
 COPY routes/ ./routes
 COPY services/ ./services
 COPY app.js .
-COPY swagger.js .
-COPY swagger-output.json . 
+COPY swagger-docs/ ./swagger-docs
 COPY .env .
 
 EXPOSE 3000

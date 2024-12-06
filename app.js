@@ -7,7 +7,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 // Swagger
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger-output.json'); 
+const swaggerDocument = require('./swagger-docs/swagger-output.json'); 
 
 var catalogueRouter = require('./routes/books');
 
