@@ -224,6 +224,53 @@ router.patch('/:isbn/readingLists', async (req, res) => {
 
 // PATCH: Update totalRating and totalReviews
 router.patch('/:isbn/review', async (req, res) => {
+  /* #swagger.tags = ['Books']
+     #swagger.description = 'Endpoint to submit a review for a book. It updates the total rating and review count based on the provided score.'
+     #swagger.parameters['isbn'] = {
+         in: 'path',
+         description: 'ISBN of the book to be reviewed.',
+         required: true,
+         type: 'string',
+         example: '9788466346122'
+     }
+     #swagger.parameters['body'] = {
+         in: 'body',
+         description: 'Review details.',
+         required: true,
+         schema: {
+           type: 'object',
+           properties: {
+             score: { type: 'number', example: 4, description: 'The score given to the book (0 to 5).' }
+           }
+         }
+     }
+     #swagger.responses[200] = {
+         description: 'Review added successfully, returning the updated rating and review count.',
+         schema: {
+             message: 'Review added successfully.',
+             bookReview: {
+                 isbn: '9788466346122',
+                 totalRating: 4.5,
+                 totalReviews: 10
+             }
+         }
+     }
+     #swagger.responses[400] = {
+         description: 'Invalid score provided.',
+         schema: { message: 'Invalid score. The score must be a number between 0 and 5.' }
+     }
+     #swagger.responses[404] = {
+         description: 'Book not found for the provided ISBN.',
+         schema: { message: 'Book not found.' }
+     }
+     #swagger.responses[500] = {
+         description: 'Unexpected error occurred.',
+         schema: {
+             message: 'An error occurred while updating the review.',
+             error: 'Detailed error message'
+         }
+     }
+  */
   const { isbn } = req.params;
   const { score } = req.body;
 
