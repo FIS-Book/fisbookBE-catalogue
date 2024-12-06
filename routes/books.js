@@ -181,24 +181,24 @@ router.patch('/:isbn/downloads', async (req, res) => {
 });
 
 
-/* PATCH Reviews List Method */
-router.patch('/:isbn/reviews', async (req, res) => {
+/* PATCH Total Reading Lists Method */
+router.patch('/:isbn/readingLists', async (req, res) => {
   try {
     const { isbn } = req.params;
-    const { totalReviews } = req.body;
+    const { inReadingLists } = req.body;
     const normalizedISBN = isbn.replace(/[-\s]/g, '');
 
     if (!Book.validateISBNFormat(normalizedISBN)) {
       return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
     }
 
-    if (typeof totalReviews === 'undefined') {
-      return res.status(400).json({ error: "'totalReviews' is required." });
+    if (typeof inReadingLists === 'undefined') {
+      return res.status(400).json({ error: "'inReadingLists' is required." });
     }
 
     const updatedBook = await Book.findOneAndUpdate(
       { isbn: normalizedISBN },
-      { $set: { totalReviews } },
+      { $set: { inReadingLists } },
       { new: true, runValidators: true }
     );
 
@@ -207,16 +207,16 @@ router.patch('/:isbn/reviews', async (req, res) => {
     }
 
     res.json({
-      message: 'Book total reviews updated successfully.',
+      message: 'Book total reading lists updated successfully.',
       book: updatedBook,
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
     }
-    console.error('Error updating total reviews:', error);
+    console.error('Error updating total reading lists:', error);
     return res.status(500).json({
-      error: 'Unexpected error while updating total reviews.',
+      error: 'Unexpected error while updating total reading lists.',
       details: error.message,
     });
   }
