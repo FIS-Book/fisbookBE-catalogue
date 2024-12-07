@@ -5,6 +5,9 @@ var logger = require('morgan');
 require('dotenv').config();
 // Mongo DB
 const mongoose = require('mongoose');
+// Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-docs/swagger-output.json'); 
 
 var catalogueRouter = require('./routes/books');
 
@@ -28,6 +31,8 @@ app.use((err, req, res, next) => {
 });
 
 app.use('/api/v1/books', catalogueRouter);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 //Mongo DB setup
 mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority&appName=${process.env.MONGO_DATABASE}`);
