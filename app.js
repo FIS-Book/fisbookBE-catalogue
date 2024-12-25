@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require('dotenv').config();
 
+
 // Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-docs/swagger-output.json'); 
@@ -33,5 +34,11 @@ app.use('/api/v1/books', catalogueRouter);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+const cors = require('cors');
+app.use(cors({
+  origin: 'http://localhost:4000', // Permite solicitudes solo desde este puerto
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 module.exports = app;
