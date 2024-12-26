@@ -8,7 +8,7 @@ describe("Integration Tests - Books DB Connection", () => {
     let dbConnect;
 
     beforeAll(async () => {
-        await mongoose.connect(`${process.env.MONGO_URI_CATALOGUE_TEST}`);
+        await mongoose.connect(process.env.MONGO_URI_CATALOGUE_TEST);
 
         dbConnect = mongoose.connection;
 
