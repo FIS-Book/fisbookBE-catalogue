@@ -32,8 +32,10 @@ const bookSchema = new mongoose.Schema({
     language: {
         type: String,
         required: true,
-        enum: ['en', 'es', 'fr', 'de', 'it', 'pt'],
-        message: 'The language must be one of the following: en, es, fr, de, it, pt.'
+        enum: {
+            values: ['en', 'es', 'fr', 'de', 'it', 'pt'],
+            message: 'The language must be one of the following: en, es, fr, de, it, pt.'
+        }
     },
     totalPages: {
         type: Number,
