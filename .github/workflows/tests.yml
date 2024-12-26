@@ -35,6 +35,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      MONGO_URI_CATALOGUE_TEST: ${{ secrets.MONGO_URI_CATALOGUE_TEST }}
+    
     steps:
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
