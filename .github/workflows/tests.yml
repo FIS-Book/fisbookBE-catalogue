@@ -34,10 +34,10 @@ jobs:
     needs: test
 
     runs-on: ubuntu-latest
-
-    env:
-      MONGO_URI_CATALOGUE_TEST: ${{ vars.MONGO_URI_CATALOGUE_TEST }}   
+  
     steps:
+    env:
+      MONGO_URI_CATALOGUE_TEST: ${{ secrets.MONGO_URI_CATALOGUE_TEST }} 
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
