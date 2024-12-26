@@ -36,8 +36,6 @@ jobs:
     runs-on: ubuntu-latest
   
     steps:
-    env:
-      MONGO_URI_CATALOGUE_TEST: ${{ secrets.MONGO_URI_CATALOGUE_TEST }} 
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -47,3 +45,5 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm run integration
+    env:
+      MONGO_URI_CATALOGUE_TEST: ${{ secrets.MONGO_URI_CATALOGUE_TEST }} 
