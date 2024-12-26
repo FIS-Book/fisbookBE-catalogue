@@ -43,6 +43,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      - run: echo $MONGO_URI_CATALOGUE_TEST
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run integration
