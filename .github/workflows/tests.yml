@@ -13,6 +13,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: fisbookBE-catalogue
 
     strategy:
       matrix:

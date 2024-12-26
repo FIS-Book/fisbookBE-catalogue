@@ -339,7 +339,6 @@ router.patch('/:isbn/downloads', async (req, res) => {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
     }
-    console.error('Error updating download count:', error);
     /* #swagger.responses[500] = {
        description: 'Unexpected error while updating download count.',
        schema: { type: 'object', properties: { error: { type: 'string', example: 'Unexpected error while updating download count.' }, details: { type: 'string' } } }
@@ -417,7 +416,6 @@ router.patch('/:isbn/readingLists', async (req, res) => {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
     }
-    console.error('Error updating total reading lists:', error);
     /* #swagger.responses[500] = {
        description: 'Unexpected error while updating total reading lists.',
        schema: { type: 'object', properties: { error: { type: 'string', example: 'Unexpected error while updating total reading lists.' }, details: { type: 'string' } } }
@@ -572,7 +570,6 @@ router.post('/', async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
-    console.error('Error creating book:', error);
     return res.status(500).json({ error: 'Unexpected server error occurred.' });
   }
 
@@ -642,7 +639,6 @@ router.delete('/:isbn', async (req, res) => {
 
     res.json({ message: 'Book deleted successfully' });
   } catch (error) {
-    console.error('Error deleting book:', error);
     return res.status(500).json({ error: 'Unexpected server error occurred.' });
   }
 });
@@ -727,7 +723,6 @@ router.put('/:isbn', async (req, res) => {
     if (error.statusCode === 400) {
       return res.status(400).json({ error: error.message });
     }
-    console.error('Error updating book:', error);
     return res.status(500).json({ error: 'Unexpected server error occurred.' });
   }
 });
