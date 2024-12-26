@@ -3,8 +3,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require('dotenv').config();
-// Mongo DB
-const mongoose = require('mongoose');
+
+
 // Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-docs/swagger-output.json'); 
@@ -34,14 +34,11 @@ app.use('/api/v1/books', catalogueRouter);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-//Mongo DB setup
-mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority&appName=${process.env.MONGO_DATABASE}`);
-
-const db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'MongoDB Atlas connection error:'));
-db.once('open', function() {
-  console.log("Successfully connected to MongoDB Atlas");
-});
+const cors = require('cors');
+app.use(cors({
+  origin: 'http://localhost:4000', // Permite solicitudes solo desde este puerto
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 module.exports = app;

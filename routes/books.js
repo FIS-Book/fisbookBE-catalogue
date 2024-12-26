@@ -2,8 +2,9 @@ var express = require('express');
 var router = express.Router();
 var openlibrary = require('../services/openlibraryservice');
 var Book = require('../models/book');
+const cors = require('cors');
 
-router.get('/isbn/:isbn', async (req, res) => {
+router.get('/isbn/:isbn', cors(), async (req, res) => {
   /*  #swagger.tags = ['Books']
       #swagger.description = 'Endpoint to search for a book by its ISBN.'
   */
@@ -52,7 +53,7 @@ router.get('/isbn/:isbn', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', cors(), async (req, res) => {
   /* #swagger.tags = ['Books']
      #swagger.description = 'Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.'
   */
@@ -165,7 +166,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/featured', async (req, res) => {
+router.get('/featured', cors(), async (req, res) => {
   /* #swagger.tags = ['Books'] 
      #swagger.description = 'Endpoint to fetch all featured books, where the featured type is not "none".' 
   */
