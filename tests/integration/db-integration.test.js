@@ -1,17 +1,20 @@
-const request = require('supertest')
+require('dotenv').config();
+const mongoose = require('mongoose');
 const Book = require('../../models/book');
-const dbConnect = require('../../db');
-const app = require('../../app');
-const { toReject } = require('jest-extended');
-
 
 jest.setTimeout(30000);
 
-describe("Books DB Connection", () => {
+describe("Integration Tests - Books DB Connection", () => {
+    let dbConnect;
+
     beforeAll(async () => {
+        await mongoose.connect(`${process.env.MONGO_URI_CATALOGUE_TEST}`);
+
+        dbConnect = mongoose.connection;
+
         if (dbConnect.readyState == 1) {
             return;
-        } 
+        }
 
         await new Promise((resolve, reject) => {
             dbConnect.on("connected", resolve);
@@ -27,86 +30,101 @@ describe("Books DB Connection", () => {
         if (dbConnect.readyState == 1) {
             await dbConnect.dropDatabase();
             await dbConnect.close();
+            await mongoose.disconnect();
         }
     });
 
-    describe("GET /api/v1/books", () => {
-        it("Should return a 200 status and a list of books", async () => {
-
-            //Agregar un libro a la base de datos para la prueba
+    describe("Tests CRUD operations", () => {
+        it('should create and save a book successfully', async () => {
             const book = new Book({
                 isbn: '1234567890123',
                 title: 'Test Book',
                 author: 'Test Author',
                 publicationYear: 2020,
-                description: 'Test description',
+                description: 'Test description - The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long',
                 language: 'es',
                 totalPages: 250,
                 categories: ['Fiction'],
-                featuredType: 'bestSeller',
-                totalRating: 4.5,
-                totalReviews: 100,
-                inReadingLists: 5,
-                coverImage: 'test_cover.jpg'
+                featuredType: 'bestSeller'
+            });
+
+            const savedBook = await book.save();
+            expect(savedBook._id).toBeDefined();
+            expect(savedBook.isbn).toBe('1234567890123');
+        });
+
+        it('should fetch a book by ISBN', async () => {
+            const book = new Book({
+                isbn: '1234567890123',
+                title: 'Test Book Title',
+                author: 'Test Author',
+                publicationYear: 2023,
+                description: 'This is a test description for the book. The description must be at least 100 characters long The description must be at least 100 characters long.',
+                language: 'en',
+                totalPages: 200,
+                categories: ['fiction'],
             });
 
             await book.save();
 
-            const response = await request(app).get('/api/v1/books');
-
-            expect(response.status).toBe(200);
-
-            expect(Array.isArray(response.body)).toBe(true);
-
-            if (response.body.length > 0) {
-                expect(response.body[0]).toHaveProperty('isbn');
-                expect(response.body[0]).toHaveProperty('title');
-                expect(response.body[0]).toHaveProperty('author');
-                expect(response.body[0]).toHaveProperty('publicationYear');
-                expect(response.body[0]).toHaveProperty('description');
-                expect(response.body[0]).toHaveProperty('language');
-                expect(response.body[0]).toHaveProperty('totalPages');
-                expect(response.body[0]).toHaveProperty('categories');
-                expect(response.body[0]).toHaveProperty('featuredType');
-                expect(response.body[0]).toHaveProperty('totalRating');
-                expect(response.body[0]).toHaveProperty('totalReviews');
-                expect(response.body[0]).toHaveProperty('inReadingLists');
-                expect(response.body[0]).toHaveProperty('coverImage'); 
-            }
+            const foundBook = await Book.findOne({ isbn: '1234567890123' });
+            expect(foundBook).toBeDefined();
+            expect(foundBook.title).toBe('Test Book Title');
         });
-    });
 
-    describe("GET /api/v1/books?", () => {
-        it('Should return books filtered by author and language', async () => {
-            const books = [
-                new Book({ author: 'Author One', language: 'es' }),
-                new Book({ author: 'Author Two', language: 'en' })
-            ];
-            const dbFind = jest.spyOn(Book, 'find').mockResolvedValue(books);
-
-            const response = await request(app).get('/api/v1/books?author=Author One&language=es');
-
-            expect(dbFind).toHaveBeenCalledWith({ author: 'Author One', language: 'es' });
-            expect(response.body.length).toBe(1);
-            expect(response.body[0].author).toBe('Author One');
-        });
-    });
-
-    describe("Get /api/v1/books/stats", () => {
-        it('Should return correct statistics', async () => {
-            const stats = {
-                totalBooks: 100,
-                totalAuthors: 50,
-                mostPopularGenre: 'Fiction',
-                mostProlificAuthor: 'Author One'
+        it('should update a book successfully', async () => {
+            const book = new Book({
+                isbn: '1234567890123',
+                title: 'Test Book',
+                author: 'Test Author',
+                publicationYear: 2020,
+                description: 'Test description - The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long',
+                language: 'es',
+                totalPages: 250,
+                categories: ['Fiction'],
+                featuredType: 'bestSeller'
+            });
+            const updatedBookData = {
+                title: 'Updated Title',
+                author: 'Updated Author',
+                publicationYear: 2024,
+                description: 'Updated description for the book.',
+                language: 'es',
+                totalPages: 250,
+                categories: ['non-fiction'],
             };
 
-            const dbStats = jest.spyOn(Book, 'aggregate').mockResolvedValue(stats);
-
-            const response = await request(app).get('/api/v1/books/stats');
-
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual(stats);
+            await book.save();
+            const updatedBook = await Book.findOneAndUpdate({ isbn: book.isbn }, updatedBookData, { new: true });
+            expect(updatedBook).toBeDefined();
+            expect(updatedBook.title).toBe('Updated Title');
+            expect(updatedBook.author).toBe('Updated Author');
+            expect(updatedBook.publicationYear).toBe(2024);
+            expect(updatedBook.description).toBe('Updated description for the book.');
+            expect(updatedBook.language).toBe('es');
+            expect(updatedBook.totalPages).toBe(250);
+            expect(updatedBook.categories).toEqual(['non-fiction']);
         });
+
+        it('should delete a book successfully', async () => {
+            const book = new Book({
+                isbn: '1234567890123',
+                title: 'Test Book',
+                author: 'Test Author',
+                publicationYear: 2020,
+                description: 'Test description - The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long The description must be at least 100 characters long',
+                language: 'es',
+                totalPages: 250,
+                categories: ['Fiction'],
+                featuredType: 'bestSeller'
+            });
+
+            const savedBook = await book.save();
+            await Book.deleteOne({ isbn: savedBook.isbn });
+            const deletedBook = await Book.findOne({ isbn: savedBook.isbn });
+
+            expect(deletedBook).toBeNull();
+        });
+
     });
 });
