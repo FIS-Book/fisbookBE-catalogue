@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 //Mongo DB setup
-mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority&appName=${process.env.MONGO_DATABASE}`);
+mongoose.connect(`${process.env.MONGO_URI_CATALOGUE}`);
 
 const db = mongoose.connection;
 
