@@ -538,6 +538,9 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "No featured books found.",
             "schema": {
@@ -1144,6 +1147,144 @@
                       }
                     }
                   }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}/review": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to submit a review for a book. It updates the total rating and review count based on the provided score.",
+        "parameters": [
+          {
+            "name": "isbn",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ISBN of the book to be reviewed.",
+            "example": "9788466346122"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Review details.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "number"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 4
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "The score given to the book (0 to 5)."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Review added successfully, returning the updated rating and review count.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Review added successfully."
+                },
+                "bookReview": {
+                  "type": "object",
+                  "properties": {
+                    "isbn": {
+                      "type": "string",
+                      "example": "9788466346122"
+                    },
+                    "totalRating": {
+                      "type": "number",
+                      "example": 4.5
+                    },
+                    "totalReviews": {
+                      "type": "number",
+                      "example": 10
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid score provided.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Invalid score. The score must be a number between 0 and 5."
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found for the provided ISBN.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Book not found."
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error occurred.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "An error occurred while updating the review."
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Detailed error message"
                 }
               },
               "xml": {
