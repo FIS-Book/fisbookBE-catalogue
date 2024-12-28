@@ -32,12 +32,23 @@ app.use((err, req, res, next) => {
 
 app.use('/api/v1/books', catalogueRouter);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/swagger-output.json', express.static(path.join(__dirname, 'swagger-docs/swagger-output.json')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customSiteTitle: 'Book Catalogue API',
+  swaggerOptions: {
+    urls: [
+      {
+        url: '/swagger-output.json',
+        name: 'Download JSON for Postman'
+      }
+    ]
+  }
+}));
 
 const cors = require('cors');
 app.use(cors({
-  origin: 'http://localhost:4000', // Permite solicitudes solo desde este puerto
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
+  origin: 'http://localhost:4000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
