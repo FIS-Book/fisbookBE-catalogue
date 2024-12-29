@@ -4,6 +4,16 @@ var openlibrary = require('../services/openlibraryservice');
 var Book = require('../models/book');
 const cors = require('cors');
 
+router.get('/healthz', (req, res) => {
+    /* 
+    #swagger.tags = ['Health']
+    #swagger.description = 'Endpoint to check the health status of the service.'
+    #swagger.responses[200] = { $ref: '#/responses/ServiceHealthy' }
+    #swagger.responses[500] = { $ref: '#/responses/ServerError' }
+  */
+  res.sendStatus(200);
+});
+
 router.get('/isbn/:isbn', cors(), async (req, res) => {
   /* 
     #swagger.tags = ['Books']

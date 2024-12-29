@@ -15,6 +15,10 @@
     {
       "name": "Admin",
       "description": "Admin endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Endpoints for service health monitoring"
     }
   ],
   "schemes": [
@@ -28,6 +32,24 @@
     "application/json"
   ],
   "paths": {
+    "/api/v1/books/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "description": "Endpoint to check the health status of the service.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/ServiceHealthy"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError",
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/v1/books/isbn/{isbn}": {
       "get": {
         "tags": [
@@ -818,6 +840,13 @@
     }
   },
   "responses": {
+    "ServiceHealthy": {
+      "description": "Service is healthy.",
+      "schema": {
+        "type": "string",
+        "example": "OK"
+      }
+    },
     "BookFound": {
       "description": "Book found.",
       "schema": {

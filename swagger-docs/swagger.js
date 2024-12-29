@@ -17,6 +17,10 @@ const doc = {
     {
       "name": "Admin",
       "description": "Admin endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Endpoints for service health monitoring"
     }
   ],
   // securityDefinitions: {
@@ -82,6 +86,13 @@ const doc = {
     }
   },
   responses: {
+    ServiceHealthy: {
+      description: "Service is healthy.",
+      schema: { 
+        type: "string", 
+        example: "OK" 
+      }
+    },
     BookFound: {
       description: "Book found.",
       schema: { 
