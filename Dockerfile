@@ -11,10 +11,10 @@ COPY bin/ ./bin
 COPY models/ ./models
 COPY routes/ ./routes
 COPY services/ ./services
-COPY app.js .
 COPY swagger-docs/ ./swagger-docs
-COPY .env .
+COPY app.js .
+COPY db.js .
 
 EXPOSE 3000
 
-CMD npm start
+CMD npm run swagger && npm start

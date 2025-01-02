@@ -30,26 +30,25 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+const cors = require('cors');
+app.use(cors({
+  origin: `${process.env.BASE_URL}`,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use('/api/v1/books', catalogueRouter);
 
-app.use('/swagger-output.json', express.static(path.join(__dirname, 'swagger-docs/swagger-output.json')));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+app.use('/api/v1/books/swagger-output.json', express.static(path.join(__dirname, 'swagger-docs/swagger-output.json')));
+app.use('/api/v1/books/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customSiteTitle: 'Book Catalogue API',
   swaggerOptions: {
     urls: [
       {
-        url: '/swagger-output.json',
+        url: '/api/v1/books/swagger-output.json',
         name: 'Download JSON for Postman'
       }
     ]
   }
-}));
-
-const cors = require('cors');
-app.use(cors({
-  origin: 'http://localhost:4000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 module.exports = app;
