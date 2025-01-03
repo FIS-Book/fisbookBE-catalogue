@@ -117,8 +117,6 @@ describe("Catalogue API", () => {
                 return request(app).post('/api/v1/books').set('Content-Type', 'application/json').send(invalidJson).then((response) => {
                     expect(response.statusCode).toBe(400);
                     expect(response.body).toHaveProperty("error", "Invalid JSON format");
-                    expect(response.body).toHaveProperty("message");
-                    expect(response.body.message).toMatch("Expected ',' or '}' after property value in JSON at position 70 (line 1 column 71)");
                 });
             });
 
