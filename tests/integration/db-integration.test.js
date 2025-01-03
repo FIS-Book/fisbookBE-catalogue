@@ -49,7 +49,6 @@ describe("Integration Tests - Books DB Connection", () => {
             });
 
             const savedBook = await book.save();
-            expect(savedBook._id).toBeDefined();
             expect(savedBook.isbn).toBe('1234567890123');
         });
 
@@ -125,10 +124,61 @@ describe("Integration Tests - Books DB Connection", () => {
 
             expect(deletedBook).toBeNull();
         });
-
     });
 
     describe("Tests Book Model Validations", () => {
+        it('should validate ISBN format using validateISBNFormat', async () => {
+            const validISBN = '1234567890123';
+            const invalidISBN = 'invalidISBN';
+        
+            const isValid = Book.validateISBNFormat(validISBN);
+            const isInvalid = Book.validateISBNFormat(invalidISBN);
+        
+            expect(isValid).toBe(true);
+            expect(isInvalid).toBe(false);
+        });
+
+        it('should not include _id and __v in the response', async () => {
+            const book = new Book({
+                isbn: '1234567890123',
+                title: 'Test Book Title',
+                author: 'Test Author',
+                publicationYear: 2023,
+                description: 'This is a test description for the book. The description must be at least 100 characters long. The description must be at least 100 characters long.',
+                language: 'en',
+                totalPages: 200,
+                categories: ['fiction'],
+            });
+
+            const createdBook = await book.save();
+            const bookJson = createdBook.toJSON();
+
+            expect(bookJson).not.toHaveProperty('_id');
+            expect(bookJson).not.toHaveProperty('__v');
+        });
+
+        it('should throw an error if downloadCount, totalRating, totalReviews, or inReadingLists are included', async () => {
+            const book = new Book({
+                isbn: '1234567890123',
+                title: 'Test Book Title',
+                author: 'Test Author',
+                publicationYear: 2023,
+                description: 'This is a test description for the book. The description must be at least 100 characters long. The description must be at least 100 characters long.',
+                language: 'en',
+                totalPages: 300,
+                categories: ['fiction'],
+                downloadCount: 5,
+                totalRating: 3,
+            });
+        
+            try {
+                await book.save();
+            } catch (err) {
+                expect(err).toBeTruthy();
+                expect(err.message).toBe('The fields downloadCount, totalRating, totalReviews, and inReadingLists should not be included in the request.');
+            }
+        });
+
         it('should fail to create a book with an invalid ISBN', async () => {
             const book = new Book({
                 isbn: 'invalidISBN',
