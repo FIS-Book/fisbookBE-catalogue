@@ -277,26 +277,39 @@ router.patch('/:isbn/readingLists', async (req, res) => {
 router.patch('/:isbn/review', async (req, res) => {
   /* 
     #swagger.tags = ['Books']
-    #swagger.description = 'Submit a review and update the total rating and review count.'
+    #swagger.description = 'Update the total rating and review count directly.'
     #swagger.parameters['isbn'] = { $ref: '#/parameters/isbnPath' }
     #swagger.parameters['body'] = {
-      name: "reviewBody",
+      name: "reviewUpdateBody",
       in: "body",
-      description: "Review details to be submitted, including the score.",
+      description: "Details to update totalRating and totalReviews.",
       required: true,
-      schema: {type: "object",properties: {score: { type: "number", example: 4, description: "The score given to the book (0 to 5)." }}
+      schema: {
+        type: "object",
+        properties: {
+          totalRating: { type: "number", example: 4.2, description: "The new total rating (0 to 5)." },
+          totalReviews: { type: "integer", example: 100, description: "The new total number of reviews (non-negative integer)." }
+        }
+      }
     }
-  }
     #swagger.responses[200] = { $ref: '#/responses/ReviewAdded' }
     #swagger.responses[400] = { $ref: '#/responses/ValidationError' }
     #swagger.responses[404] = { $ref: '#/responses/BookNotFound' }
     #swagger.responses[500] = { $ref: '#/responses/ServerError' }
   */
-  const { isbn } = req.params;
-  const { score } = req.body;
 
-  if (typeof score !== 'number' || score < 0 || score > 5) {
-      return res.status(400).json({ message: 'Invalid score. The score must be a number between 0 and 5.' });
+  const { isbn } = req.params;
+  const { totalRating, totalReviews } = req.body;
+
+  // Validate input
+  if (totalRating === undefined || totalReviews === undefined) {
+    return res.status(400).json({ message: 'Both totalRating and totalReviews are required.' });
+  }
+  if (typeof totalRating !== 'number' || totalRating < 0 || totalRating > 5) {
+    return res.status(400).json({ message: 'Invalid totalRating. It must be a number between 0 and 5.' });
+  }
+  if (!Number.isInteger(totalReviews) || totalReviews < 0) {
+    return res.status(400).json({ message: 'Invalid totalReviews. It must be a non-negative integer.' });
   }
 
   try {
@@ -305,16 +318,14 @@ router.patch('/:isbn/review', async (req, res) => {
           return res.status(404).json({ message: 'Book not found.' });
       }
 
-    const updatedTotalReviews = book.totalReviews + 1;
-    const updatedTotalRating = ((book.totalRating * book.totalReviews) + score) / updatedTotalReviews;
-
-    book.totalReviews = updatedTotalReviews;
-    book.totalRating = updatedTotalRating;
+      // Update book record
+      book.totalRating = totalRating;
+      book.totalReviews = totalReviews;
       await book.save();
 
       res.status(200).json({
-          message: 'Review added successfully.',
-          bookReview: {
+          message: 'Book review stats updated successfully.',
+          updatedBook: {
               isbn: book.isbn,
               totalRating: book.totalRating,
               totalReviews: book.totalReviews,
