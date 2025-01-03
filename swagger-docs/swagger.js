@@ -6,7 +6,7 @@ const doc = {
     description: 'This API handles operations related to books in the catalog.',
   },
   host: `${new URL(process.env.BASE_URL).host}`,
-  schemes: ['http'],
+  schemes: ['http','https'],
   consumes: ['application/json'],
   produces: ['application/json'],
   tags: [

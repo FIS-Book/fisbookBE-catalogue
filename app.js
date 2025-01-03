@@ -32,7 +32,7 @@ app.use((err, req, res, next) => {
 
 const cors = require('cors');
 app.use(cors({
-  origin: `${process.env.BASE_URL}`,
+  origin: [`${process.env.BASE_URL}`,"http://localhost:3000"],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

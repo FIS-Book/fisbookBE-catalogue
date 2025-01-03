@@ -14,7 +14,7 @@ router.get('/healthz', (req, res) => {
   res.sendStatus(200);
 });
 
-router.get('/isbn/:isbn', cors(), async (req, res) => {
+router.get('/isbn/:isbn', async (req, res) => {
   /* 
     #swagger.tags = ['Books']
     #swagger.description = 'Endpoint to search for a book by its ISBN.'
@@ -45,7 +45,7 @@ router.get('/isbn/:isbn', cors(), async (req, res) => {
   }
 });
 
-router.get('/', cors(), async (req, res) => {
+router.get('/', async (req, res) => {
   /* 
   #swagger.tags = ['Books']
   #swagger.description = 'Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.'
@@ -95,7 +95,7 @@ router.get('/', cors(), async (req, res) => {
   }
 });
 
-router.get('/featured', cors(), async (req, res) => {
+router.get('/featured', async (req, res) => {
   /* 
     #swagger.tags = ['Books'] 
     #swagger.description = 'Endpoint to fetch all featured books, where the featured type is not "none".'
@@ -361,7 +361,7 @@ router.post('/', async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
-    return res.status(500).json({ error: 'Unexpected server error occurred.' });
+    return res.status(500).json({ error: 'Unexpected server error occurred.', message: error.message });
   }
 
 });
