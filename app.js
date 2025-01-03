@@ -21,7 +21,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError) {
-    console.error('Error Invalid JSON format:', err.message);
     return res.status(400).json({ 
       error: 'Invalid JSON format', 
       message: err.message 
