@@ -16,7 +16,7 @@ router.get('/healthz', (req, res) => {
   res.sendStatus(200);
 });
 
-router.get('/isbn/:isbn', cors(), authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
+router.get('/isbn/:isbn', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books']
     #swagger.description = 'Endpoint to search for a book by its ISBN.'
@@ -47,7 +47,7 @@ router.get('/isbn/:isbn', cors(), authenticateAndAuthorize(['User', 'Admin']), a
   }
 });
 
-router.get('/', cors(), authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
+router.get('/', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
   #swagger.tags = ['Books']
   #swagger.description = 'Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.'
@@ -97,7 +97,7 @@ router.get('/', cors(), authenticateAndAuthorize(['User', 'Admin']), async (req,
   }
 });
 
-router.get('/featured', cors(), authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
+router.get('/featured', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books'] 
     #swagger.description = 'Endpoint to fetch all featured books, where the featured type is not "none".'
