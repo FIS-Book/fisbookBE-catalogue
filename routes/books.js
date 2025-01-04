@@ -3,6 +3,8 @@ var router = express.Router();
 var openlibrary = require('../services/openlibraryservice');
 var Book = require('../models/book');
 const cors = require('cors');
+const authenticateAndAuthorize = require('../authentication/authenticateAndAuthorize');
+
 
 router.get('/healthz', (req, res) => {
   /* 
@@ -14,7 +16,7 @@ router.get('/healthz', (req, res) => {
   res.sendStatus(200);
 });
 
-router.get('/isbn/:isbn', async (req, res) => {
+router.get('/isbn/:isbn', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books']
     #swagger.description = 'Endpoint to search for a book by its ISBN.'
@@ -45,7 +47,7 @@ router.get('/isbn/:isbn', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
   #swagger.tags = ['Books']
   #swagger.description = 'Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.'
@@ -95,7 +97,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/featured', async (req, res) => {
+router.get('/featured', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books'] 
     #swagger.description = 'Endpoint to fetch all featured books, where the featured type is not "none".'
@@ -114,7 +116,7 @@ router.get('/featured', async (req, res) => {
   }
 });
 
-router.get('/latest', async (req, res) => {
+router.get('/latest', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books'] 
     #swagger.description = 'Endpoint to fetch the 10 latest books, ordered by publication year in descending order.'
@@ -136,7 +138,7 @@ router.get('/latest', async (req, res) => {
   }
 });
 
-router.get('/stats', async (req, res) => {
+router.get('/stats', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books'] 
     #swagger.description = 'Endpoint to fetch statistics about the books collection, including total books, number of authors, most popular genre, and most prolific author.'
@@ -171,7 +173,7 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-router.patch('/:isbn/downloads', async (req, res) => {
+router.patch('/:isbn/downloads', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /*
     #swagger.tags = ['Books']
     #swagger.description = 'Endpoint to update the download count for a specific book identified by its ISBN.'
@@ -226,7 +228,7 @@ router.patch('/:isbn/downloads', async (req, res) => {
   }
 });
 
-router.patch('/:isbn/readingLists', async (req, res) => {
+router.patch('/:isbn/readingLists', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books']
     #swagger.description = 'Update the reading lists count for a book identified by its ISBN.'
@@ -281,7 +283,7 @@ router.patch('/:isbn/readingLists', async (req, res) => {
   }
 });
 
-router.patch('/:isbn/review', async (req, res) => {
+router.patch('/:isbn/review', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books']
     #swagger.description = 'Update the total rating and review count directly.'
@@ -347,7 +349,7 @@ router.patch('/:isbn/review', async (req, res) => {
 });
 
 // ADMIN ENDPOINTS
-router.post('/', async (req, res) => {
+router.post('/', authenticateAndAuthorize(['Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Admin']
     #swagger.description = 'Create a new book in the catalog.'
@@ -387,7 +389,7 @@ router.post('/', async (req, res) => {
 
 });
 
-router.delete('/:isbn', async (req, res) => {
+router.delete('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Admin']
     #swagger.description = 'Delete a book from the catalog by ISBN.'
@@ -417,7 +419,7 @@ router.delete('/:isbn', async (req, res) => {
   }
 });
 
-router.put('/:isbn', async (req, res) => {
+router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
   /* #swagger.tags = ['Admin']
      #swagger.description = 'Endpoint to update the details of a book by ISBN.'
      #swagger.parameters['isbn'] = { $ref: '#/parameters/isbnPath' }
