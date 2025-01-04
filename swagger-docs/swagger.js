@@ -23,14 +23,19 @@ const doc = {
       "description": "Endpoints for service health monitoring"
     }
   ],
-  // securityDefinitions: {
-  //   apiKeyAuth: {
-  //     type: "apiKey",
-  //     in: "header",  // "header", "query" o "cookie"
-  //     name: "X-API-KEY",
-  //     description: "Authentication header for API access"
-  //   }
-  // },
+  securityDefinitions: {
+    BearerAuth: {
+      type: 'apiKey', 
+      name: 'Authorization',
+      in: 'header',
+      description: 'Enter your JWT token in the format `Bearer <your-token>`',
+    },
+  },
+  security: [
+    {
+      BearerAuth: [],
+    },
+  ],
   parameters: {
     // Parameters path
     isbnPath: {
