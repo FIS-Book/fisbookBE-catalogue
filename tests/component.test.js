@@ -34,7 +34,20 @@ const createValidationError = (field, message, value, type = "min", constraint =
         }
     };
 };
-
+jest.mock('../authentication/authenticateAndAuthorize', () => {
+    return jest.fn(() => (req, res, next) => {
+        req.user = {
+            _id: '1234567890abcdef12345678',
+            nombre: 'Test',
+            apellidos: 'User',
+            username: 'testuser',
+            email: 'test@example.com',
+            plan: 'free',
+            rol: 'Admin'
+          };
+        next();
+    });
+});
 describe("Catalogue API", () => {
     
     describe("Admin endpoints", () => {

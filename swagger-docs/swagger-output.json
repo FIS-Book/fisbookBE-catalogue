@@ -25,6 +25,14 @@
     "http",
     "https"
   ],
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Enter your JWT token in the format `Bearer <your-token>`"
+    }
+  },
   "consumes": [
     "application/json"
   ],
@@ -59,6 +67,11 @@
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
@@ -70,6 +83,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/InvalidISBN"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/BookNotFound"
@@ -78,7 +97,12 @@
             "description": "Internal Server Error",
             "$ref": "#/responses/ServerError"
           }
-        }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/books/": {
@@ -88,6 +112,11 @@
         ],
         "description": "Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
           {
             "$ref": "#/parameters/titleQuery"
           },
@@ -116,6 +145,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/InvalidQueryParams"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/NoBooksFound"
@@ -132,6 +167,11 @@
         ],
         "description": "Create a new book in the catalog.",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "bookBody",
             "in": "body",
@@ -151,6 +191,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/ValidationError"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "409": {
             "description": "Conflict",
             "$ref": "#/responses/DuplicateISBN"
@@ -168,10 +214,26 @@
           "Books"
         ],
         "description": "Endpoint to fetch all featured books, where the featured type is not \"none\".",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "$ref": "#/responses/BooksFound"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found",
@@ -190,10 +252,23 @@
           "Books"
         ],
         "description": "Endpoint to fetch the 10 latest books, ordered by publication year in descending order.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "$ref": "#/responses/BooksFound"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found",
@@ -212,10 +287,23 @@
           "Books"
         ],
         "description": "Endpoint to fetch statistics about the books collection, including total books, number of authors, most popular genre, and most prolific author.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "$ref": "#/responses/StatsFetched"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "500": {
             "description": "Internal Server Error",
@@ -233,6 +321,11 @@
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           },
           {
             "name": "downloadCountBody",
@@ -277,6 +370,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/ValidationError"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/BookNotFound"
@@ -297,6 +396,11 @@
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           },
           {
             "name": "readingListsBody",
@@ -341,6 +445,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/ValidationError"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/BookNotFound"
@@ -361,6 +471,11 @@
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           },
           {
             "name": "reviewUpdateBody",
@@ -426,6 +541,12 @@
             "description": "Bad Request",
             "$ref": "#/responses/ValidationError"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/BookNotFound"
@@ -446,6 +567,11 @@
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
@@ -456,6 +582,12 @@
           "400": {
             "description": "Bad Request",
             "$ref": "#/responses/InvalidISBN"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found",
@@ -477,6 +609,11 @@
             "$ref": "#/parameters/isbnPath"
           },
           {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "bookBody",
             "in": "body",
             "description": "Updated details for the book.",
@@ -494,6 +631,12 @@
           "400": {
             "description": "Bad Request",
             "$ref": "#/responses/InvalidISBN"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found",
@@ -801,6 +944,11 @@
       }
     }
   },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
   "parameters": {
     "isbnPath": {
       "name": "isbn",
