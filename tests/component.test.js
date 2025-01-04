@@ -36,6 +36,7 @@ const createValidationError = (field, message, value, type = "min", constraint =
 };
 
 describe("Catalogue API", () => {
+    
     describe("Admin endpoints", () => {
         describe("POST /api/v1/books", () => {
             const book = {
@@ -301,7 +302,7 @@ describe("Catalogue API", () => {
 
                 return request(app).delete(`/api/v1/books/${isbn}`).then((response) => {
                     expect(response.statusCode).toBe(404);
-                    expect(response.body).toHaveProperty("error", "Book not found for deletion.");
+                    expect(response.body).toHaveProperty("message", "Book not found for deletion.");
                     expect(dbDelete).toBeCalled();
                 });
             });
@@ -381,7 +382,7 @@ describe("Catalogue API", () => {
 
                 return request(app).put(`/api/v1/books/${validIsbn}`).send(validBook).then((response) => {
                     expect(response.statusCode).toBe(404);
-                    expect(response.body).toHaveProperty("error", "Book not found for updating.");
+                    expect(response.body).toHaveProperty("message", "Book not found for updating.");
                     expect(dbUpdate).toBeCalled();
                 });
             });
@@ -485,7 +486,7 @@ describe("Catalogue API", () => {
 
                 return request(app).get(`/api/v1/books/isbn/${book.isbn}`).then((response) => {
                     expect(response.statusCode).toBe(404);
-                    expect(response.body).toHaveProperty("error", "Book not found");
+                    expect(response.body).toHaveProperty("message", "Book not found");
                     expect(dbFindOne).toBeCalled();
                 });
             });
@@ -883,7 +884,7 @@ describe("Catalogue API", () => {
 
                 return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount }).then((response) => {
                     expect(response.statusCode).toBe(404);
-                    expect(response.body.error).toBe('Book not found.');
+                    expect(response.body.message).toBe('Book not found.');
                 });
             });
 
@@ -990,7 +991,7 @@ describe("Catalogue API", () => {
 
                 return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists }).then((response) => {
                     expect(response.statusCode).toBe(404);
-                    expect(response.body.error).toBe('Book not found.');
+                    expect(response.body.message).toBe('Book not found.');
                 });
             });
 
@@ -1007,6 +1008,126 @@ describe("Catalogue API", () => {
                 });                
             });
         });
+        describe("PATCH /api/v1/books/:isbn/review", () => {
+            let dbfindOneUpdate;
 
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbfindOneUpdate = jest.spyOn(Book, 'findOneAndUpdate');
+            });
+
+            it("Should return 200 and update the totalRating and totalReviews counts successfully", async () => {
+                const isbn = '1234567891';
+                const totalRating = 4.5;
+                const totalReviews = 3;
+                const updatedBook = {
+                    isbn,
+                    totalRating,
+                    totalReviews,
+                };
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(updatedBook));
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({ totalRating, totalReviews }).then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body.message).toBe('Book review stats updated successfully.');
+                    expect(response.body.updatedBook.isbn).toBe(isbn);
+                    expect(response.body.updatedBook.totalRating).toBe(totalRating);
+                    expect(response.body.updatedBook.totalReviews).toBe(totalReviews);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 400 if ISBN format is invalid", async () => {
+                const invalidIsbn = 'invalid-isbn';
+                const totalRating = 4.5;
+                const totalReviews = 3;
+
+                return request(app).patch(`/api/v1/books/${invalidIsbn}/review`).send({ totalRating, totalReviews }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe('Invalid ISBN format. Must be ISBN-10 or ISBN-13.');
+                });
+            });
+
+            it("Should return 400 if totalRating and totalReviews are not provided", async () => {
+                const isbn = '9781234567890';
+                const totalRating = 4.5;
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({totalRating}).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("Both totalRating and totalReviews are required.");
+                });
+            });
+
+            it("Should return 400 if totalRating or totalReviews are not a number", async () => {
+                const isbn = '9781234567890';
+                const invalidtotalRating = "not-a-number";
+                const totalReviews = 3;
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({ totalRating: invalidtotalRating, totalReviews}).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("Invalid input. Both totalRating and totalReviews must be numbers.");
+                });
+            });
+
+            it("Should return 400 if totalRating is greater than 5", async () => {
+                const isbn = '9781234567890';
+                const totalRating = 6;
+                const totalReviews = 3;
+                dbfindOneUpdate.mockImplementation(async () => {
+                    throw createValidationError(
+                        "totalRating",
+                        "The total rating cannot be greater than 5.",
+                        totalRating,
+                        "max", 5
+                    );
+                });
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({ totalRating, totalReviews}).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("Validation failed. Check the provided data.");
+                    expect(response.body.details).toHaveProperty("totalRating");
+                    expect(response.body.details.totalRating).toHaveProperty("message", "The total rating cannot be greater than 5.");
+                    expect(response.body.details.totalRating).toHaveProperty("value", totalRating);
+                    expect(response.body.details.totalRating.properties).toHaveProperty("type", "max");
+                    expect(response.body.details.totalRating.properties).toHaveProperty("max", 5);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if book is not found", async () => {
+                const isbn = '9781234567890';
+                const totalRating = 3;
+                const totalReviews = 3;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(null));
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({ totalRating, totalReviews }).then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body.message).toBe('Book not found.');
+                });
+            });
+
+            it("Should return 500 if an unexpected error occurs", async () => {
+                const isbn = '9781234567890';
+                const totalRating = 3;
+                const totalReviews = 3;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.reject(new Error('Unexpected error')));
+
+                return request(app).patch(`/api/v1/books/${isbn}/review`).send({ totalRating, totalReviews }).then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body.message).toBe('Unexpected server error occurred.');
+                    expect(response.body.error).toBe('Unexpected error');
+                });                
+            });
+        });
+    });
+    describe("healthcheck endpoint", () => {
+        it("Should return 200 if the server is healthy", async () => {
+            return request(app).get('/api/v1/books/healthz').then((response) => {
+                expect(response.statusCode).toBe(200);
+            });
+        });
     });
 });
