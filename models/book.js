@@ -90,11 +90,11 @@ const bookSchema = new mongoose.Schema({
 // Clean Get Data
 bookSchema.set('toJSON', {
     transform: (doc, ret) => {
-      delete ret._id; 
-      delete ret.__v; 
-      return ret; 
+        delete ret._id;
+        delete ret.__v;
+        return ret;
     }
-  });
+});
 
 // Pre-save middleware to validate certain fields
 bookSchema.pre('save', function(next) {
