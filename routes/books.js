@@ -7,12 +7,12 @@ const authenticateAndAuthorize = require('../authentication/authenticateAndAutho
 
 
 router.get('/healthz', (req, res) => {
-    /* 
-    #swagger.tags = ['Health']
-    #swagger.description = 'Endpoint to check the health status of the service.'
-    #swagger.responses[200] = { $ref: '#/responses/ServiceHealthy' }
-    #swagger.responses[500] = { $ref: '#/responses/ServerError' }
-  */
+  /* 
+  #swagger.tags = ['Health']
+  #swagger.description = 'Endpoint to check the health status of the service.'
+  #swagger.responses[200] = { $ref: '#/responses/ServiceHealthy' }
+  #swagger.responses[500] = { $ref: '#/responses/ServerError' }
+*/
   res.sendStatus(200);
 });
 
@@ -40,7 +40,7 @@ router.get('/isbn/:isbn', cors(), authenticateAndAuthorize(['User', 'Admin']), a
       return res.json(book);
     }
 
-    return res.status(404).json({ error: 'Book not found' });
+    return res.status(404).json({ message: 'Book not found' });
 
   } catch (error) {
     return res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
@@ -134,8 +134,7 @@ router.get('/latest', authenticateAndAuthorize(['User', 'Admin']), async (req, r
     }
     res.json(latestBooks);
   } catch (error) {
-    console.error('Error fetching latest books:', error);
-    return res.status(500).json({ message: 'Unexpected server error occurred.', error});
+    return res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }
 });
 
@@ -204,6 +203,10 @@ router.patch('/:isbn/downloads', authenticateAndAuthorize(['User', 'Admin']), as
       return res.status(400).json({ error: "'downloadCount' is required." });
     }
 
+    if (typeof downloadCount !== 'number' || isNaN(downloadCount)) {
+      return res.status(400).json({ error: "'downloadCount' must be a valid number." });
+    }
+
     const updatedBook = await Book.findOneAndUpdate(
       { isbn: normalizedISBN },
       { $set: { downloadCount } },
@@ -211,7 +214,7 @@ router.patch('/:isbn/downloads', authenticateAndAuthorize(['User', 'Admin']), as
     );
 
     if (!updatedBook) {
-      return res.status(404).json({ error: 'Book not found.' });
+      return res.status(404).json({ message: 'Book not found.' });
     }
     res.json({
       message: 'Book download count updated successfully.',
@@ -255,6 +258,10 @@ router.patch('/:isbn/readingLists', authenticateAndAuthorize(['User', 'Admin']),
       return res.status(400).json({ error: "'inReadingLists' is required." });
     }
 
+    if (typeof inReadingLists !== 'number' || isNaN(inReadingLists)) {
+      return res.status(400).json({ error: "'inReadingLists' must be a valid number." });
+    }
+
     const updatedBook = await Book.findOneAndUpdate(
       { isbn: normalizedISBN },
       { $set: { inReadingLists } },
@@ -262,7 +269,7 @@ router.patch('/:isbn/readingLists', authenticateAndAuthorize(['User', 'Admin']),
     );
 
     if (!updatedBook) {
-      return res.status(404).json({ error: 'Book not found.' });
+      return res.status(404).json({ message: 'Book not found.' });
     }
     res.json({
       message: 'Book total reading lists updated successfully.',
@@ -279,51 +286,65 @@ router.patch('/:isbn/readingLists', authenticateAndAuthorize(['User', 'Admin']),
 router.patch('/:isbn/review', authenticateAndAuthorize(['User', 'Admin']), async (req, res) => {
   /* 
     #swagger.tags = ['Books']
-    #swagger.description = 'Submit a review and update the total rating and review count.'
+    #swagger.description = 'Update the total rating and review count directly.'
     #swagger.parameters['isbn'] = { $ref: '#/parameters/isbnPath' }
     #swagger.parameters['body'] = {
-      name: "reviewBody",
+      name: "reviewUpdateBody",
       in: "body",
-      description: "Review details to be submitted, including the score.",
+      description: "Details to update totalRating and totalReviews.",
       required: true,
-      schema: {type: "object",properties: {score: { type: "number", example: 4, description: "The score given to the book (0 to 5)." }}
+      schema: {
+        type: "object",
+        properties: {
+          totalRating: { type: "number", example: 4.2, description: "The new total rating (0 to 5)." },
+          totalReviews: { type: "integer", example: 100, description: "The new total number of reviews (non-negative integer)." }
+        }
+      }
     }
-  }
     #swagger.responses[200] = { $ref: '#/responses/ReviewAdded' }
     #swagger.responses[400] = { $ref: '#/responses/ValidationError' }
     #swagger.responses[404] = { $ref: '#/responses/BookNotFound' }
     #swagger.responses[500] = { $ref: '#/responses/ServerError' }
   */
-  const { isbn } = req.params;
-  const { score } = req.body;
 
-  if (typeof score !== 'number' || score < 0 || score > 5) {
-      return res.status(400).json({ message: 'Invalid score. The score must be a number between 0 and 5.' });
+  const { isbn } = req.params;
+  const { totalRating, totalReviews } = req.body;
+  const normalizedISBN = isbn.replace(/[-\s]/g, '');
+
+  if (!Book.validateISBNFormat(normalizedISBN)) {
+    return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+  }
+  if (totalRating === undefined || totalReviews === undefined) {
+    return res.status(400).json({ error: 'Both totalRating and totalReviews are required.' });
+  }
+  if (typeof totalRating !== 'number' || typeof totalReviews !== 'number') {
+    return res.status(400).json({ error: 'Invalid input. Both totalRating and totalReviews must be numbers.' });
   }
 
   try {
-      const book = await Book.findOne({ isbn });
-      if (!book) {
-          return res.status(404).json({ message: 'Book not found.' });
+    const updatedBook = await Book.findOneAndUpdate(
+      { isbn },
+      { $set: { totalRating, totalReviews } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedBook) {
+      return res.status(404).json({ message: 'Book not found.' });
+    }
+
+    res.status(200).json({
+      message: 'Book review stats updated successfully.',
+      updatedBook: {
+        isbn: updatedBook.isbn,
+        totalRating: updatedBook.totalRating,
+        totalReviews: updatedBook.totalReviews,
       }
-
-    const updatedTotalReviews = book.totalReviews + 1;
-    const updatedTotalRating = ((book.totalRating * book.totalReviews) + score) / updatedTotalReviews;
-
-    book.totalReviews = updatedTotalReviews;
-    book.totalRating = updatedTotalRating;
-      await book.save();
-
-      res.status(200).json({
-          message: 'Review added successfully.',
-          bookReview: {
-              isbn: book.isbn,
-              totalRating: book.totalRating,
-              totalReviews: book.totalReviews,
-          }
-      });
+    });
   } catch (error) {
-      res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed. Check the provided data.', details: error.errors });
+    }
+    res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }
 });
 
@@ -363,7 +384,7 @@ router.post('/', authenticateAndAuthorize(['Admin']), async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
-    return res.status(500).json({ error: 'Unexpected server error occurred.' });
+    return res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }
 
 });
@@ -389,7 +410,7 @@ router.delete('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) =>
     const book = await Book.findOneAndDelete({ isbn });
 
     if (!book) {
-      return res.status(404).json({ error: 'Book not found for deletion.' });
+      return res.status(404).json({ message: 'Book not found for deletion.' });
     }
 
     res.json({ message: 'Book deleted successfully' });
@@ -434,7 +455,7 @@ router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
     );
 
     if (!book) {
-      return res.status(404).json({ error: 'Book not found for updating.' });
+      return res.status(404).json({ message: 'Book not found for updating.' });
     }
 
     res.json({ message: 'Book updated successfully', book });
@@ -445,7 +466,7 @@ router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
     if (error.statusCode === 400) {
       return res.status(400).json({ error: error.message });
     }
-    return res.status(500).json({ error: 'Unexpected server error occurred.' });
+    res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }
 });
 
