@@ -173,9 +173,6 @@
             "description": "OK",
             "$ref": "#/responses/BooksFound"
           },
-          "400": {
-            "description": "Bad Request"
-          },
           "404": {
             "description": "Not Found",
             "$ref": "#/responses/NoFeaturedBooks"
@@ -360,15 +357,15 @@
         "tags": [
           "Books"
         ],
-        "description": "Submit a review and update the total rating and review count.",
+        "description": "Update the total rating and review count directly.",
         "parameters": [
           {
             "$ref": "#/parameters/isbnPath"
           },
           {
-            "name": "reviewBody",
+            "name": "reviewUpdateBody",
             "in": "body",
-            "description": "Review details to be submitted, including the score.",
+            "description": "Details to update totalRating and totalReviews.",
             "required": true,
             "schema": {
               "type": "object",
@@ -380,7 +377,7 @@
                 "properties": {
                   "type": "object",
                   "properties": {
-                    "score": {
+                    "totalRating": {
                       "type": "object",
                       "properties": {
                         "type": {
@@ -389,11 +386,28 @@
                         },
                         "example": {
                           "type": "number",
-                          "example": 4
+                          "example": 4.2
                         },
                         "description": {
                           "type": "string",
-                          "example": "The score given to the book (0 to 5)."
+                          "example": "The new total rating (0 to 5)."
+                        }
+                      }
+                    },
+                    "totalReviews": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "integer"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 100
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "The new total number of reviews (non-negative integer)."
                         }
                       }
                     }
