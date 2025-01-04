@@ -21,7 +21,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError) {
-    console.error('Error Invalid JSON format:', err.message);
     return res.status(400).json({ 
       error: 'Invalid JSON format', 
       message: err.message 
@@ -30,15 +29,25 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-app.use('/api/v1/books', catalogueRouter);
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
 const cors = require('cors');
 app.use(cors({
-  origin: 'http://localhost:4000', // Permite solicitudes solo desde este puerto
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
+  origin: [`${process.env.BASE_URL}`,"http://localhost:3000"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use('/api/v1/books', catalogueRouter);
+
+app.use('/api/v1/books/swagger-output.json', express.static(path.join(__dirname, 'swagger-docs/swagger-output.json')));
+app.use('/api/v1/books/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customSiteTitle: 'Book Catalogue API',
+  swaggerOptions: {
+    urls: [
+      {
+        url: '/api/v1/books/swagger-output.json',
+        name: 'Download JSON for Postman'
+      }
+    ]
+  }
 }));
 
 module.exports = app;

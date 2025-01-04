@@ -15,6 +15,10 @@
     {
       "name": "Admin",
       "description": "Admin endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Endpoints for service health monitoring"
     }
   ],
   "schemes": [
@@ -28,6 +32,24 @@
     "application/json"
   ],
   "paths": {
+    "/api/v1/books/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "description": "Endpoint to check the health status of the service.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/ServiceHealthy"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError",
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/v1/books/isbn/{isbn}": {
       "get": {
         "tags": [
@@ -36,119 +58,25 @@
         "description": "Endpoint to search for a book by its ISBN.",
         "parameters": [
           {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ISBN of the book to search for. Must be in ISBN-10 or ISBN-13 format.",
-            "format": "isbn"
+            "$ref": "#/parameters/isbnPath"
           }
         ],
         "responses": {
           "200": {
-            "description": "Book found.",
-            "schema": {
-              "$ref": "#/definitions/Book"
-            }
+            "description": "OK",
+            "$ref": "#/responses/BookFound"
           },
           "400": {
-            "description": "Invalid ISBN format. Must be ISBN-10 or ISBN-13.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Invalid ISBN format. Must be ISBN-10 or ISBN-13."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
           },
           "404": {
-            "description": "Book not found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book not found"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
           },
           "500": {
-            "description": "Unexpected server error occurred.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected server error occurred."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -161,212 +89,40 @@
         "description": "Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.",
         "parameters": [
           {
-            "name": "title",
-            "in": "query",
-            "description": "Search for books by title.",
-            "required": false,
-            "type": "string",
-            "example": "El día que se perdió la cordura"
+            "$ref": "#/parameters/titleQuery"
           },
           {
-            "name": "author",
-            "in": "query",
-            "description": "Search for books by author.",
-            "required": false,
-            "type": "string",
-            "example": "Javier Castillo"
+            "$ref": "#/parameters/authorQuery"
           },
           {
-            "name": "publicationYear",
-            "in": "query",
-            "description": "Search for books by publication year.",
-            "required": false,
-            "type": "integer",
-            "example": 2015
+            "$ref": "#/parameters/publicationYearQuery"
           },
           {
-            "name": "category",
-            "in": "query",
-            "description": "Search for books by category.",
-            "required": false,
-            "type": "string",
-            "example": "Fiction"
+            "$ref": "#/parameters/categoryQuery"
           },
           {
-            "name": "language",
-            "in": "query",
-            "description": "Search for books by language.",
-            "required": false,
-            "type": "string",
-            "example": "es"
+            "$ref": "#/parameters/languageQuery"
           },
           {
-            "name": "featuredType",
-            "in": "query",
-            "description": "Filter books by featured type (e.g., bestSeller).",
-            "required": false,
-            "type": "string",
-            "example": "bestSeller"
+            "$ref": "#/parameters/featuredTypeQuery"
           }
         ],
         "responses": {
           "200": {
-            "description": "Books found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "array"
-                },
-                "items": {
-                  "$ref": "#/definitions/Book"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
           },
           "400": {
-            "description": "Invalid query parameters provided.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Invalid query parameters provided."
-                        }
-                      }
-                    },
-                    "invalidParameters": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "array"
-                        },
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "example": "string"
-                            }
-                          }
-                        },
-                        "example": {
-                          "type": "array",
-                          "example": [
-                            "invalidParam1",
-                            "invalidParam2"
-                          ],
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidQueryParams"
           },
           "404": {
-            "description": "No books found for the given search criteria.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "No results found for the given search criteria."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/NoBooksFound"
           },
           "500": {
-            "description": "Unexpected error while performing search.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected error while performing search."
-                        }
-                      }
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Detailed error message here"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       },
@@ -374,10 +130,10 @@
         "tags": [
           "Admin"
         ],
-        "description": "Endpoint to create a new book in the catalog.",
+        "description": "Create a new book in the catalog.",
         "parameters": [
           {
-            "name": "body",
+            "name": "bookBody",
             "in": "body",
             "description": "Book details to create a new book.",
             "required": true,
@@ -388,127 +144,20 @@
         ],
         "responses": {
           "201": {
-            "description": "Book created successfully.",
-            "schema": {
-              "$ref": "#/definitions/Book"
-            }
+            "description": "Created",
+            "$ref": "#/responses/BookCreated"
           },
           "400": {
-            "description": "Validation error. Invalid input data.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Validation failed. Check the provided data."
-                        }
-                      }
-                    },
-                    "details": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "object"
-                        },
-                        "example": {
-                          "type": "object",
-                          "properties": {
-                            "isbn": {
-                              "type": "string",
-                              "example": "Invalid ISBN format"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
           },
           "409": {
-            "description": "Conflict error. Duplicate ISBN.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Duplicate ISBN: a book with this ISBN already exists."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Conflict",
+            "$ref": "#/responses/DuplicateISBN"
           },
           "500": {
-            "description": "Unexpected server error.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected server error occurred."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -521,101 +170,16 @@
         "description": "Endpoint to fetch all featured books, where the featured type is not \"none\".",
         "responses": {
           "200": {
-            "description": "Featured books found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "array"
-                },
-                "items": {
-                  "$ref": "#/definitions/Book"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
           },
           "404": {
-            "description": "No featured books found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "No featured books found."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/NoFeaturedBooks"
           },
           "500": {
-            "description": "Unexpected error while fetching featured books.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected error while fetching featured books."
-                        }
-                      }
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Detailed error message here"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -628,101 +192,16 @@
         "description": "Endpoint to fetch the 10 latest books, ordered by publication year in descending order.",
         "responses": {
           "200": {
-            "description": "Latest books found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "array"
-                },
-                "items": {
-                  "$ref": "#/definitions/Book"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
           },
           "404": {
-            "description": "No books found.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "No books found."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/NoBooksFound"
           },
           "500": {
-            "description": "Internal server error. Please try again later.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Internal server error. Please try again later."
-                        }
-                      }
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Detailed error message here"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -735,69 +214,12 @@
         "description": "Endpoint to fetch statistics about the books collection, including total books, number of authors, most popular genre, and most prolific author.",
         "responses": {
           "200": {
-            "description": "Statistics fetched successfully.",
-            "schema": {
-              "$ref": "#/definitions/Stats"
-            }
+            "description": "OK",
+            "$ref": "#/responses/StatsFetched"
           },
           "500": {
-            "description": "Error fetching book stats.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "boolean"
-                        },
-                        "example": {
-                          "type": "boolean",
-                          "example": false
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Error fetching book stats."
-                        }
-                      }
-                    },
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Detailed error message here"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -810,15 +232,10 @@
         "description": "Endpoint to update the download count for a specific book identified by its ISBN.",
         "parameters": [
           {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ISBN of the book to update the download count.",
-            "example": "9788466346122"
+            "$ref": "#/parameters/isbnPath"
           },
           {
-            "name": "body",
+            "name": "downloadCountBody",
             "in": "body",
             "description": "Download count to update for the book.",
             "required": true,
@@ -853,127 +270,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Download count updated successfully.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book download count updated successfully."
-                        }
-                      }
-                    },
-                    "book": {
-                      "$ref": "#/definitions/Book"
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/DownloadUpdated"
           },
           "400": {
-            "description": "Validation failed. Check the provided data.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Validation failed. Check the provided data."
-                        }
-                      }
-                    },
-                    "details": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "object"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
           },
           "500": {
-            "description": "Unexpected error while updating download count.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected error while updating download count."
-                        }
-                      }
-                    },
-                    "details": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -983,18 +293,13 @@
         "tags": [
           "Books"
         ],
-        "description": "Endpoint to update the total reading lists count for a specific book identified by its ISBN.",
+        "description": "Update the reading lists count for a book identified by its ISBN.",
         "parameters": [
           {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ISBN of the book to update the reading lists count.",
-            "example": "9788466346122"
+            "$ref": "#/parameters/isbnPath"
           },
           {
-            "name": "body",
+            "name": "readingListsBody",
             "in": "body",
             "description": "Reading lists count to update for the book.",
             "required": true,
@@ -1029,88 +334,39 @@
         ],
         "responses": {
           "200": {
-            "description": "Reading lists count updated successfully.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book total reading lists updated successfully."
-                        }
-                      }
-                    },
-                    "book": {
-                      "$ref": "#/definitions/Book"
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/inReadingListsUpdated"
           },
           "400": {
-            "description": "Validation failed. Check the provided data.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Validation failed. Check the provided data."
-                        }
-                      }
-                    },
-                    "details": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "object"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
           },
           "500": {
-            "description": "Unexpected error while updating total reading lists.",
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}/review": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Update the total rating and review count directly.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "reviewUpdateBody",
+            "in": "body",
+            "description": "Details to update totalRating and totalReviews.",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
@@ -1121,35 +377,62 @@
                 "properties": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "totalRating": {
                       "type": "object",
                       "properties": {
                         "type": {
                           "type": "string",
-                          "example": "string"
+                          "example": "number"
                         },
                         "example": {
+                          "type": "number",
+                          "example": 4.2
+                        },
+                        "description": {
                           "type": "string",
-                          "example": "Unexpected error while updating total reading lists."
+                          "example": "The new total rating (0 to 5)."
                         }
                       }
                     },
-                    "details": {
+                    "totalReviews": {
                       "type": "object",
                       "properties": {
                         "type": {
                           "type": "string",
-                          "example": "string"
+                          "example": "integer"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 100
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "The new total number of reviews (non-negative integer)."
                         }
                       }
                     }
                   }
                 }
-              },
-              "xml": {
-                "name": "main"
               }
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/ReviewAdded"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -1159,149 +442,28 @@
         "tags": [
           "Admin"
         ],
-        "description": "Endpoint to delete a book from the catalog by ISBN.",
+        "description": "Delete a book from the catalog by ISBN.",
         "parameters": [
           {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ISBN of the book to be deleted.",
-            "example": "9788466346122"
+            "$ref": "#/parameters/isbnPath"
           }
         ],
         "responses": {
           "200": {
-            "description": "Book deleted successfully.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book deleted successfully"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK",
+            "$ref": "#/responses/BookDeleted"
           },
           "400": {
-            "description": "Invalid ISBN format.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Invalid ISBN format. Must be ISBN-10 or ISBN-13."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
           },
           "404": {
-            "description": "Book not found for deletion.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book not found for deletion."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
           },
           "500": {
-            "description": "Unexpected server error.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected server error occurred."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       },
@@ -1312,15 +474,10 @@
         "description": "Endpoint to update the details of a book by ISBN.",
         "parameters": [
           {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ISBN of the book to be updated.",
-            "example": "9788466346122"
+            "$ref": "#/parameters/isbnPath"
           },
           {
-            "name": "body",
+            "name": "bookBody",
             "in": "body",
             "description": "Updated details for the book.",
             "required": true,
@@ -1331,109 +488,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Book updated successfully.",
-            "schema": {
-              "$ref": "#/definitions/Book"
-            }
+            "description": "OK",
+            "$ref": "#/responses/BookUpdated"
           },
           "400": {
-            "description": "Invalid ISBN format or validation error.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Invalid ISBN format or validation error."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
           },
           "404": {
-            "description": "Book not found for updating.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Book not found for updating."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
           },
           "500": {
-            "description": "Unexpected server error.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "object"
-                },
-                "properties": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "example": "string"
-                        },
-                        "example": {
-                          "type": "string",
-                          "example": "Unexpected server error occurred."
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
           }
         }
       }
@@ -1731,30 +799,284 @@
           }
         }
       }
+    }
+  },
+  "parameters": {
+    "isbnPath": {
+      "name": "isbn",
+      "in": "path",
+      "description": "ISBN of the book. Must be in ISBN-10 or ISBN-13 format.",
+      "required": true,
+      "type": "string",
+      "format": "isbn"
     },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "example": "object"
-        },
+    "titleQuery": {
+      "name": "title",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "El día que se perdió la cordura"
+    },
+    "authorQuery": {
+      "name": "author",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "Javier Castillo"
+    },
+    "publicationYearQuery": {
+      "name": "publicationYear",
+      "in": "query",
+      "required": false,
+      "type": "integer",
+      "example": 2015
+    },
+    "categoryQuery": {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "Fiction"
+    },
+    "languageQuery": {
+      "name": "language",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "es"
+    },
+    "featuredTypeQuery": {
+      "name": "featuredType",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "bestSeller"
+    }
+  },
+  "responses": {
+    "ServiceHealthy": {
+      "description": "Service is healthy.",
+      "schema": {
+        "type": "string",
+        "example": "OK"
+      }
+    },
+    "BookFound": {
+      "description": "Book found.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "BooksFound": {
+      "description": "Books found.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Book"
+        }
+      }
+    },
+    "BookNotFound": {
+      "description": "Book not found.",
+      "schema": {
+        "type": "object",
         "properties": {
-          "type": "object",
-          "properties": {
-            "error": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "example": "string"
-                },
-                "example": {
-                  "type": "string",
-                  "example": "Book not found"
-                }
+          "error": {
+            "type": "string",
+            "example": "Book not found"
+          }
+        }
+      }
+    },
+    "StatsFetched": {
+      "description": "Statistics fetched successfully.",
+      "schema": {
+        "$ref": "#/definitions/Stats"
+      }
+    },
+    "DownloadUpdated": {
+      "description": "Download count updated successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book download count updated successfully."
+          },
+          "updatedBook": {
+            "$ref": "#/definitions/Book"
+          }
+        }
+      }
+    },
+    "inReadingListsUpdated": {
+      "description": "Reading lists count updated successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book total reading lists updated successfully."
+          },
+          "book": {
+            "$ref": "#/definitions/Book"
+          }
+        }
+      }
+    },
+    "ReviewAdded": {
+      "description": "Review added successfully, returning the updated rating and review count.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Review added successfully."
+          },
+          "bookReview": {
+            "type": "object",
+            "properties": {
+              "isbn": {
+                "type": "string",
+                "example": "9788466346122"
+              },
+              "totalRating": {
+                "type": "number",
+                "example": 4.5
+              },
+              "totalReviews": {
+                "type": "integer",
+                "example": 10
               }
             }
+          }
+        }
+      }
+    },
+    "BookCreated": {
+      "description": "Book created successfully.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "BookDeleted": {
+      "description": "Book deleted successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book deleted successfully"
+          }
+        }
+      }
+    },
+    "BookUpdated": {
+      "description": "Book updated successfully.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "NoBooksFound": {
+      "description": "No books found for the given search criteria.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "No books found for the given search criteria."
+          }
+        }
+      }
+    },
+    "NoFeaturedBooks": {
+      "description": "No featured books found.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "No featured books found."
+          }
+        }
+      }
+    },
+    "InvalidISBN": {
+      "description": "Invalid ISBN format. Must be ISBN-10 or ISBN-13.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Invalid ISBN format. Must be ISBN-10 or ISBN-13."
+          }
+        }
+      }
+    },
+    "DuplicateISBN": {
+      "description": "Conflict error. Duplicate ISBN.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Duplicate ISBN: a book with this ISBN already exists."
+          }
+        }
+      }
+    },
+    "InvalidQueryParams": {
+      "description": "Invalid query parameters provided.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Invalid query parameters provided."
+          },
+          "invalidParameters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "invalidParam1",
+              "invalidParam2"
+            ]
+          }
+        }
+      }
+    },
+    "ValidationError": {
+      "description": "Validation failed. Check the provided data.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed. Check the provided data."
+          },
+          "details": {
+            "type": "object",
+            "example": {
+              "isbn": "Invalid ISBN format"
+            }
+          }
+        }
+      }
+    },
+    "ServerError": {
+      "description": "Unexpected server error occurred.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Unexpected server error occurred."
+          },
+          "error": {
+            "type": "string",
+            "example": "InternalServerError: database connection failed."
           }
         }
       }
