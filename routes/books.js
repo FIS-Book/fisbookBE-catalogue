@@ -132,8 +132,7 @@ router.get('/latest', async (req, res) => {
     }
     res.json(latestBooks);
   } catch (error) {
-    console.error('Error fetching latest books:', error);
-    return res.status(500).json({ message: 'Unexpected server error occurred.', error});
+    return res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }
 });
 
@@ -202,6 +201,10 @@ router.patch('/:isbn/downloads', async (req, res) => {
       return res.status(400).json({ error: "'downloadCount' is required." });
     }
 
+    if (typeof downloadCount !== 'number' || isNaN(downloadCount)) {
+      return res.status(400).json({ error: "'downloadCount' must be a valid number." });
+    }
+
     const updatedBook = await Book.findOneAndUpdate(
       { isbn: normalizedISBN },
       { $set: { downloadCount } },
@@ -251,6 +254,10 @@ router.patch('/:isbn/readingLists', async (req, res) => {
 
     if (typeof inReadingLists === 'undefined') {
       return res.status(400).json({ error: "'inReadingLists' is required." });
+    }
+
+    if (typeof inReadingLists !== 'number' || isNaN(inReadingLists)) {
+      return res.status(400).json({ error: "'inReadingLists' must be a valid number." });
     }
 
     const updatedBook = await Book.findOneAndUpdate(
