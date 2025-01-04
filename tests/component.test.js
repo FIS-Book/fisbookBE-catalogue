@@ -90,9 +90,7 @@ describe("Catalogue API", () => {
             });
 
             it("Should create a book with null cover image if openlibrary fails to fetch cover", async () => {
-                jest.spyOn(openlibrary, "getCoverUrl").mockImplementation(async () => {
-                    return null;
-                });
+                jest.spyOn(openlibrary, "getCoverUrl").mockImplementation(async () => Promise.resolve(null));
                 dbSave.mockImplementation(async () => Promise.resolve());
 
                 return request(app).post(`/api/v1/books`).send(book).then((response) => {
@@ -104,9 +102,7 @@ describe("Catalogue API", () => {
             });
 
             it("Should return 500 if there is an unexpected server error", async () => {
-                dbSave.mockImplementation(async () => {
-                    throw new Error("Unexpected server error occurred.");
-                });
+                dbSave.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
 
                 return request(app).post(`/api/v1/books`).send(book).then((response) => {
                     expect(response.statusCode).toBe(500);
@@ -125,8 +121,8 @@ describe("Catalogue API", () => {
             });
 
             it("Should return 400 if auto-generated fields are included in the request", async () => {
-                const invalidBook = new Book({ 
-                    ...book, 
+                const invalidBook = new Book({
+                    ...book,
                     downloadCount: 1
                 });
                 dbSave.mockImplementation(async () => {
@@ -290,27 +286,9 @@ describe("Catalogue API", () => {
 
             it("Should delete a book if everything is fine", async () => {
                 const validIsbn = '9788466346122';
-                dbDelete.mockImplementation(async () => {
-                    return {
-                        isbn: "9788466346122",
-                        title: "El día que se perdió la cordura",
-                        author: "Javier Castillo",
-                        publicationYear: 2015,
-                        description: "Centro de Boston, 24 de diciembre, un hombre camina desnudo con la cabeza decapitada de una joven. El doctor Jenkins, director del centro psiquiátrico de la ciudad, y Stella Hyden, agente de perfiles del FBI, se adentrarán en una investigación que pondrá en juego sus vidas, su concepción de la cordura y que los llevará hasta unos sucesos fortuitos ocurridos en el misterioso pueblo de Salt Lake diecisiete años atrás.",
-                        language: "es",
-                        totalPages: 456,
-                        categories: ["Fiction", "Thrillers", "Suspense"],
-                        featuredType: "bestSeller",
-                        downloadCount: 0,
-                        totalRating: 0,
-                        totalReviews: 0,
-                        inReadingLists: 0,
-                        coverImage: "https://covers.openlibrary.org/b/isbn/9788466346122-L.jpg"
-                    };
-                });
+                dbDelete.mockImplementation(async () => Promise.resolve(true));
 
                 return request(app).delete(`/api/v1/books/${validIsbn}`).then((response) => {
-                    console.log(response.body);
                     expect(response.statusCode).toBe(200);
                     expect(response.body).toHaveProperty("message", "Book deleted successfully");
                     expect(dbDelete).toBeCalled();
@@ -319,9 +297,7 @@ describe("Catalogue API", () => {
 
             it("Should return 404 if the book does not exist", async () => {
                 const isbn = '9788466346122';
-                dbDelete.mockImplementation(async () => {
-                    return null;
-                });
+                dbDelete.mockImplementation(async () => Promise.resolve(null));
 
                 return request(app).delete(`/api/v1/books/${isbn}`).then((response) => {
                     expect(response.statusCode).toBe(404);
@@ -341,9 +317,7 @@ describe("Catalogue API", () => {
 
             it("Should return 500 if there is an unexpected server error", async () => {
                 const isbn = '9788466346122';
-                dbDelete.mockImplementation(async () => {
-                    throw new Error("Unexpected server error occurred.");
-                });
+                dbDelete.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
 
                 return request(app).delete(`/api/v1/books/${isbn}`).then((response) => {
                     expect(response.statusCode).toBe(500);
@@ -359,7 +333,7 @@ describe("Catalogue API", () => {
                 title: 'Test Book',
                 author: 'Test Author',
                 publicationYear: 2021,
-                description: 'A test book description.',
+                description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
                 language: 'en',
                 totalPages: 200,
                 categories: ['Fiction'],
@@ -377,24 +351,7 @@ describe("Catalogue API", () => {
             });
 
             it("Should update a book if everything is fine", async () => {
-                dbUpdate.mockImplementation(async () => {
-                    return {
-                        isbn: '9781234567890',
-                        title: 'Test Book',
-                        author: 'Test Author',
-                        publicationYear: 2021,
-                        description: 'A test book description.',
-                        language: 'en',
-                        totalPages: 200,
-                        categories: ['Fiction'],
-                        featuredType: 'none',
-                        downloadCount: 0,
-                        totalRating: 0,
-                        totalReviews: 2,
-                        inReadingLists: 0,
-                        coverImage: null
-                    };
-                });
+                dbUpdate.mockImplementation(async () => Promise.resolve(validBook));
 
                 return request(app).put(`/api/v1/books/${validIsbn}`).send(validBook).then((response) => {
                     expect(response.statusCode).toBe(200);
@@ -420,9 +377,7 @@ describe("Catalogue API", () => {
             });
 
             it("Should return 404 if the book does not exist", async () => {
-                dbUpdate.mockImplementation(async () => {
-                    return null;
-                });
+                dbUpdate.mockImplementation(async () => Promise.resolve(null));
 
                 return request(app).put(`/api/v1/books/${validIsbn}`).send(validBook).then((response) => {
                     expect(response.statusCode).toBe(404);
@@ -441,9 +396,7 @@ describe("Catalogue API", () => {
             });
 
             it("Should return 500 if there is an unexpected server error", async () => {
-                dbUpdate.mockImplementation(async () => {
-                    throw new Error("Unexpected server error occurred.");
-                });
+                dbUpdate.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
 
                 return request(app).put(`/api/v1/books/${validIsbn}`).send(validBook).then((response) => {
                     expect(response.statusCode).toBe(500);
@@ -477,5 +430,583 @@ describe("Catalogue API", () => {
                 });
             });
         });
+    });
+    describe("Books endpoints", () => {
+        describe("GET /api/v1/books/isbn/{isbn}", () => {
+            const book = new Book({
+                isbn: '9781234567890',
+                title: 'Test Book',
+                author: 'Test Author',
+                publicationYear: 2021,
+                description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                language: 'en',
+                totalPages: 200,
+                categories: ['Fiction'],
+                featuredType: 'none',
+                downloadCount: 0,
+                totalRating: 0,
+                totalReviews: 2,
+                inReadingLists: 0,
+                coverImage: null
+            });
+            var dbFindOne;
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbFindOne = jest.spyOn(Book, 'findOne');
+            });
+
+            it("Should return all books if everything is fine", async () => {
+                dbFindOne.mockImplementation(async () => Promise.resolve(book));
+
+                return request(app).get(`/api/v1/books/isbn/${book.isbn}`).then((response) => {
+                    expect(response.statusCode).toBe(200);
+
+                    expect(response.body).toHaveProperty("isbn", book.isbn);
+                    expect(response.body).toHaveProperty("title", book.title);
+                    expect(response.body).toHaveProperty("author", book.author);
+                    expect(response.body).toHaveProperty("publicationYear", book.publicationYear);
+                    expect(response.body).toHaveProperty("description", book.description);
+                    expect(response.body).toHaveProperty("language", book.language);
+                    expect(response.body).toHaveProperty("totalPages", book.totalPages);
+                    expect(response.body).toHaveProperty("categories");
+                    expect(response.body.categories).toEqual(expect.arrayContaining(book.categories));
+                    expect(response.body).toHaveProperty("featuredType", book.featuredType);
+                    expect(response.body).toHaveProperty("downloadCount", book.downloadCount);
+                    expect(response.body).toHaveProperty("totalRating", book.totalRating);
+                    expect(response.body).toHaveProperty("totalReviews", book.totalReviews);
+                    expect(response.body).toHaveProperty("inReadingLists", book.inReadingLists);
+                    expect(response.body).toHaveProperty("coverImage", book.coverImage);
+                    expect(dbFindOne).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if no books are found", async () => {
+                dbFindOne.mockImplementation(async () => Promise.resolve(null));
+
+                return request(app).get(`/api/v1/books/isbn/${book.isbn}`).then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body).toHaveProperty("error", "Book not found");
+                    expect(dbFindOne).toBeCalled();
+                });
+            });
+
+            it("Should return 500 if there is an unexpected server error", async () => {
+                dbFindOne.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
+
+                return request(app).get(`/api/v1/books/isbn/${book.isbn}`).then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body).toHaveProperty("error", "Unexpected server error occurred.");
+                    expect(dbFindOne).toBeCalled();
+                });
+            });
+
+            it("Should return 400 if the ISBN format is invalid", async () => {
+                const invalidIsbn = '123';
+
+                return request(app).get(`/api/v1/books/isbn/${invalidIsbn}`).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body).toHaveProperty("error", "Invalid ISBN format. Must be ISBN-10 or ISBN-13.");
+                });
+            });
+        });
+        describe("GET /api/v1/books", () => {
+            const books = [
+                {
+                    isbn: '9781234567890',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2021,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'Bestseller',
+                    downloadCount: 10,
+                    totalRating: 2,
+                    totalReviews: 2,
+                    inReadingLists: 1,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/9781234567890-L.jpg"
+                },
+                {
+                    isbn: '1234567891',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2021,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'none',
+                    downloadCount: 0,
+                    totalRating: 0,
+                    totalReviews: 2,
+                    inReadingLists: 0,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/1234567891-L.jpg"
+                }];
+            var dbFind;
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbFind = jest.spyOn(Book, 'find');
+            });
+
+            it("Should return books if filters are applied correctly", async () => {
+                dbFind.mockImplementation(async () => Promise.resolve(books));
+
+                return request(app).get('/api/v1/books?title=Book&author=Author').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual(expect.arrayContaining(books));
+                    expect(dbFind).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if no books are found", async () => {
+                dbFind.mockImplementation(async () => Promise.resolve([]));
+
+                return request(app).get('/api/v1/books?title=Book&author=Author').then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body).toEqual({ message: "No books found for the given search criteria." }); // Ajustado para igualar la respuesta actual
+                    expect(dbFind).toBeCalled();
+                });
+            });
+
+            it("Should return 500 if there is an unexpected server error", async () => {
+                dbFind.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
+
+                return request(app).get('/api/v1/books?title=Book&author=Author').then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body).toHaveProperty("error", "Unexpected server error occurred.");
+                    expect(dbFind).toBeCalled();
+                });
+            });
+
+            it("Should return 400 if query parameters are invalid", async () => {
+                return request(app).get('/api/v1/books?invalidparam=Bo').then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body).toHaveProperty("message", "Invalid query parameters provided.");
+                    expect(response.body).toHaveProperty("invalidParameters");
+                    expect(response.body.invalidParameters).toEqual(expect.arrayContaining(["invalidparam"]));
+                });
+            });
+
+            it("Should return 200 and a list of books when all query parameters are provided", async () => {
+                dbFind.mockImplementation(async () => Promise.resolve(books[0]));
+
+                return request(app).get('/api/v1/books?title=Book&author=Author&publicationYear=2021&language=en&category=Fiction&featuredType=Bestseller').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual(books[0]);
+                    expect(dbFind).toBeCalled();
+                });
+            });
+
+        });
+        describe("GET /api/v1/books/featured", () => {
+            const books = [
+                {
+                    isbn: '9781234567890',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2021,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'Bestseller',
+                    downloadCount: 10,
+                    totalRating: 2,
+                    totalReviews: 2,
+                    inReadingLists: 1,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/9781234567890-L.jpg"
+                },
+                {
+                    isbn: '1234567891',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2021,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'awardWinner',
+                    downloadCount: 0,
+                    totalRating: 0,
+                    totalReviews: 2,
+                    inReadingLists: 0,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/1234567891-L.jpg"
+                }];
+            var dbFind;
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbFind = jest.spyOn(Book, 'find');
+            });
+
+            it("Should return 200 and a list of featured books", async () => {
+                dbFind.mockImplementation(async () => Promise.resolve(books));
+
+                return request(app).get('/api/v1/books/featured').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual(books);
+                    expect(dbFind).toBeCalledWith({ featuredType: { $ne: 'none' } });
+                });
+            });
+
+            it("Should return 404 if no featured books are found", async () => {
+                dbFind.mockImplementation(async () => Promise.resolve([]));
+
+                return request(app).get('/api/v1/books/featured').then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body).toEqual({ message: "No featured books found." });
+                    expect(dbFind).toBeCalledWith({ featuredType: { $ne: 'none' } });
+                });
+            });
+
+            it("Should return 500 if there is an unexpected server error", async () => {
+                dbFind.mockImplementation(async () => Promise.reject(new Error("Unexpected server error occurred.")));
+
+                return request(app).get('/api/v1/books/featured').then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body).toHaveProperty("error", "Unexpected server error occurred.");
+                    expect(dbFind).toBeCalledWith({ featuredType: { $ne: 'none' } });
+                });
+            });
+        });
+        describe("GET /api/v1/books/latest", () => {
+            const books = [
+                {
+                    isbn: '9781234567890',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2024,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'Bestseller',
+                    downloadCount: 10,
+                    totalRating: 2,
+                    totalReviews: 2,
+                    inReadingLists: 1,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/9781234567890-L.jpg"
+                },
+                {
+                    isbn: '1234567891',
+                    title: 'Test Book',
+                    author: 'Test Author',
+                    publicationYear: 2024,
+                    description: 'A test book description that is exactly one hundred and twenty characters long for testing.',
+                    language: 'en',
+                    totalPages: 200,
+                    categories: ['Fiction'],
+                    featuredType: 'awardWinner',
+                    downloadCount: 0,
+                    totalRating: 0,
+                    totalReviews: 2,
+                    inReadingLists: 0,
+                    coverImage: "https://covers.openlibrary.org/b/isbn/1234567891-L.jpg"
+                }];
+            var dbFind;
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbFind = jest.spyOn(Book, 'find');
+            });
+
+            it("Should return 200 and a list of lastest books", async () => {
+                dbFind.mockReturnValue({
+                    sort: jest.fn().mockReturnThis(),
+                    limit: jest.fn().mockResolvedValue(books),
+                });
+
+                return request(app).get('/api/v1/books/latest').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual(books);
+                    expect(dbFind).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if no latest books are found", async () => {
+                dbFind.mockReturnValue({
+                    sort: jest.fn().mockReturnThis(),
+                    limit: jest.fn().mockResolvedValue([]), // Devuelve los libros después de aplicar sort y limit
+                });
+
+                return request(app).get('/api/v1/books/latest').then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body).toEqual({ message: 'No books found.' });
+                    expect(dbFind).toBeCalled();
+                });
+            });
+        });
+        describe("GET /api/v1/books/stats", () => {
+            const stats = {
+                totalBooks: 5,
+                authors: 3,
+                mostPopularGenre: 'Fiction',
+                mostProlificAuthor: 'Test Author',
+            };
+            beforeEach(() => {
+                jest.clearAllMocks();
+            });
+
+            it("Should return 200 and stats data", async () => {
+                jest.spyOn(Book, 'countDocuments').mockResolvedValue(5);
+                jest.spyOn(Book, 'distinct').mockResolvedValue(['Author1', 'Author2', 'Test Author']);
+                jest.spyOn(Book, 'aggregate').mockResolvedValueOnce([{ _id: 'Fiction', count: 3 }]);
+                jest.spyOn(Book, 'aggregate').mockResolvedValueOnce([{ _id: 'Test Author', count: 2 }]);
+
+
+                return request(app).get('/api/v1/books/stats').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual({
+                        success: true,
+                        data: stats,
+                    });
+                });
+            });
+
+            it("Should return 500 if there's a server error", async () => {
+                // Simulamos un error en el proceso de agregación.
+                jest.spyOn(Book, 'countDocuments').mockRejectedValueOnce(new Error('Database error'));
+
+                return request(app).get('/api/v1/books/stats').then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body).toEqual({
+                        message: 'Unexpected server error occurred.',
+                        error: 'Database error',
+                    });
+                });
+            });
+
+            it("Should handle empty results (no books in the collection)", async () => {
+                // Simulamos que no hay libros en la colección.
+                jest.spyOn(Book, 'countDocuments').mockResolvedValue(0); // Total books = 0
+                jest.spyOn(Book, 'distinct').mockResolvedValue([]); // No authors
+                jest.spyOn(Book, 'aggregate').mockResolvedValue([]); // No genres or authors
+
+                return request(app).get('/api/v1/books/stats').then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body).toEqual({
+                        success: true,
+                        data: {
+                            totalBooks: 0,
+                            authors: 0,
+                            mostPopularGenre: null,
+                            mostProlificAuthor: null,
+                        },
+                    });
+                });
+            });
+        });
+        describe("PATCH /api/v1/books/:isbn/downloads", () => {
+            let dbfindOneUpdate;
+
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbfindOneUpdate = jest.spyOn(Book, 'findOneAndUpdate');
+            });
+
+            it("Should return 200 and update the download count successfully", async () => {
+                const isbn = '1234567891';
+                const downloadCount = 100;
+                const updatedBook = {
+                    isbn,
+                    title: 'Test Book',
+                    downloadCount
+                };
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(updatedBook));
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body.message).toBe('Book download count updated successfully.');
+                    expect(response.body.book.downloadCount).toBe(downloadCount);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 400 if ISBN format is invalid", async () => {
+                const invalidIsbn = 'invalid-isbn';
+                const downloadCount = 100;
+
+                return request(app).patch(`/api/v1/books/${invalidIsbn}/downloads`).send({ downloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe('Invalid ISBN format. Must be ISBN-10 or ISBN-13.');
+                });
+            });
+
+            it("Should return 400 if downloadCount is not provided", async () => {
+                const isbn = '9781234567890';
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({}).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("'downloadCount' is required.");
+                });
+            });
+
+            it("Should return 400 if downloadCount is not a number", async () => {
+                const isbn = '9781234567890';
+                const invalidDownloadCount = "not-a-number";
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount: invalidDownloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("'downloadCount' must be a valid number.");
+                });
+            });
+
+            it("Should return 400 if downloadCount is less than 0", async () => {
+                const isbn = '9781234567890';
+                const downloadCount = -10;
+                dbfindOneUpdate.mockImplementation(async () => {
+                    throw createValidationError(
+                        "downloadCount",
+                        "The download count cannot be negative.",
+                        downloadCount,
+                        "min", 0
+                    );
+                });
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("Validation failed. Check the provided data.");
+                    expect(response.body.details).toHaveProperty("downloadCount");
+                    expect(response.body.details.downloadCount).toHaveProperty("message", "The download count cannot be negative.");
+                    expect(response.body.details.downloadCount).toHaveProperty("value", downloadCount);
+                    expect(response.body.details.downloadCount.properties).toHaveProperty("type", "min");
+                    expect(response.body.details.downloadCount.properties).toHaveProperty("min", 0);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if book is not found", async () => {
+                const isbn = '9781234567890';
+                const downloadCount = 100;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(null));
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body.error).toBe('Book not found.');
+                });
+            });
+
+            it("Should return 500 if an unexpected error occurs", async () => {
+                const isbn = '9781234567890';
+                const downloadCount = 100;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.reject(new Error('Unexpected error')));
+
+                return request(app).patch(`/api/v1/books/${isbn}/downloads`).send({ downloadCount }).then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body.message).toBe('Unexpected server error occurred.');
+                    expect(response.body.error).toBe('Unexpected error');
+                });                
+            });
+        });
+        describe("PATCH /api/v1/books/:isbn/readingsLists", () => {
+            let dbfindOneUpdate;
+
+            beforeEach(() => {
+                jest.clearAllMocks();
+                dbfindOneUpdate = jest.spyOn(Book, 'findOneAndUpdate');
+            });
+
+            it("Should return 200 and update the inReadingLists count successfully", async () => {
+                const isbn = '1234567891';
+                const inReadingLists = 100;
+                const updatedBook = {
+                    isbn,
+                    title: 'Test Book',
+                    inReadingLists
+                };
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(updatedBook));
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body.message).toBe('Book total reading lists updated successfully.');
+                    expect(response.body.book.inReadingLists).toBe(inReadingLists);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 400 if ISBN format is invalid", async () => {
+                const invalidIsbn = 'invalid-isbn';
+                const inReadingLists = 100;
+
+                return request(app).patch(`/api/v1/books/${invalidIsbn}/readingLists`).send({ inReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe('Invalid ISBN format. Must be ISBN-10 or ISBN-13.');
+                });
+            });
+
+            it("Should return 400 if inReadingLists is not provided", async () => {
+                const isbn = '9781234567890';
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({}).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("'inReadingLists' is required.");
+                });
+            });
+
+            it("Should return 400 if inReadingLists is not a number", async () => {
+                const isbn = '9781234567890';
+                const invalidinReadingLists = "not-a-number";
+
+                // dbfindOneUpdate.mockImplementation(async () => Promise.resolve(null));
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists: invalidinReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("'inReadingLists' must be a valid number.");
+                });
+            });
+
+            it("Should return 400 if inReadingLists is less than 0", async () => {
+                const isbn = '9781234567890';
+                const inReadingLists = -10;
+                dbfindOneUpdate.mockImplementation(async () => {
+                    throw createValidationError(
+                        "inReadingLists",
+                        "The number of reading lists cannot be negative.",
+                        inReadingLists,
+                        "min", 0
+                    );
+                });
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(400);
+                    expect(response.body.error).toBe("Validation failed. Check the provided data.");
+                    expect(response.body.details).toHaveProperty("inReadingLists");
+                    expect(response.body.details.inReadingLists).toHaveProperty("message", "The number of reading lists cannot be negative.");
+                    expect(response.body.details.inReadingLists).toHaveProperty("value", inReadingLists);
+                    expect(response.body.details.inReadingLists.properties).toHaveProperty("type", "min");
+                    expect(response.body.details.inReadingLists.properties).toHaveProperty("min", 0);
+                    expect(dbfindOneUpdate).toBeCalled();
+                });
+            });
+
+            it("Should return 404 if book is not found", async () => {
+                const isbn = '9781234567890';
+                const inReadingLists = 100;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.resolve(null));
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(404);
+                    expect(response.body.error).toBe('Book not found.');
+                });
+            });
+
+            it("Should return 500 if an unexpected error occurs", async () => {
+                const isbn = '9781234567890';
+                const inReadingLists = 100;
+
+                dbfindOneUpdate.mockImplementation(async () => Promise.reject(new Error('Unexpected error')));
+
+                return request(app).patch(`/api/v1/books/${isbn}/readingLists`).send({ inReadingLists }).then((response) => {
+                    expect(response.statusCode).toBe(500);
+                    expect(response.body.message).toBe('Unexpected server error occurred.');
+                    expect(response.body.error).toBe('Unexpected error');
+                });                
+            });
+        });
+
     });
 });
