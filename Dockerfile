@@ -7,6 +7,7 @@ COPY package-lock.json .
 
 RUN npm install
 
+COPY authentication/ ./authentication
 COPY bin/ ./bin
 COPY models/ ./models
 COPY routes/ ./routes

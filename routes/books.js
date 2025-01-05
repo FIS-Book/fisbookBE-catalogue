@@ -433,6 +433,7 @@ router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
      #swagger.responses[200] = { $ref: '#/responses/BookUpdated' }
      #swagger.responses[400] = { $ref: '#/responses/InvalidISBN' }
      #swagger.responses[404] = { $ref: '#/responses/BookNotFound' }
+     #swagger.responses[409] = { $ref: '#/responses/DuplicateISBN' }
      #swagger.responses[500] = { $ref: '#/responses/ServerError' }
   */
   try {
@@ -441,6 +442,14 @@ router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
 
     if (!Book.validateISBNFormat(isbn)) {
       return res.status(400).json({ error: 'Invalid ISBN format. Must be ISBN-10 or ISBN-13.' });
+    }
+
+    const fieldsToExclude = ["downloadCount", "totalRating", "totalReviews", "inReadingLists", "coverImage"];
+    fieldsToExclude.forEach(field => delete req.body[field]);
+
+    if (req.body.isbn && req.body.isbn !== isbn) {
+      const coverImage = await openlibrary.getCoverUrl(req.body.isbn);
+      req.body.coverImage = coverImage;
     }
 
     const book = await Book.findOneAndUpdate(
@@ -465,6 +474,9 @@ router.put('/:isbn', authenticateAndAuthorize(['Admin']), async (req, res) => {
     }
     if (error.statusCode === 400) {
       return res.status(400).json({ error: error.message });
+    }
+    if (error.code === 11000) {
+      return res.status(409).json({ error: 'Duplicate ISBN: a book with this ISBN already exists.' });
     }
     res.status(500).json({ message: 'Unexpected server error occurred.', error: error.message });
   }

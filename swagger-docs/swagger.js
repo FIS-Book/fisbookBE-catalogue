@@ -116,7 +116,7 @@ const doc = {
       schema: {
         type: "object",
         properties: {
-          error: { type: "string", example: "Book not found" }
+          message: { type: "string", example: "Book not found" }
         }
       }
     },
