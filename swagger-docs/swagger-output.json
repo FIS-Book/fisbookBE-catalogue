@@ -1,0 +1,1229 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Book Catalogue API",
+    "description": "This API handles operations related to books in the catalog.",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Books",
+      "description": "Endpoints for managing books in the library"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Endpoints for service health monitoring"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Enter your JWT token in the format `Bearer <your-token>`"
+    }
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/books/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "description": "Endpoint to check the health status of the service.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/ServiceHealthy"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError",
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/books/isbn/{isbn}": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to search for a book by its ISBN.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BookFound"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to search for books with optional filters. You can filter by title, author, publication year, category, language, and featured type.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "$ref": "#/parameters/titleQuery"
+          },
+          {
+            "$ref": "#/parameters/authorQuery"
+          },
+          {
+            "$ref": "#/parameters/publicationYearQuery"
+          },
+          {
+            "$ref": "#/parameters/categoryQuery"
+          },
+          {
+            "$ref": "#/parameters/languageQuery"
+          },
+          {
+            "$ref": "#/parameters/featuredTypeQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidQueryParams"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/NoBooksFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "description": "Create a new book in the catalog.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "bookBody",
+            "in": "body",
+            "description": "Book details to create a new book.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Book"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "$ref": "#/responses/BookCreated"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict",
+            "$ref": "#/responses/DuplicateISBN"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/featured": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to fetch all featured books, where the featured type is not \"none\".",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/NoFeaturedBooks"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/latest": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to fetch the 10 latest books, ordered by publication year in descending order.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BooksFound"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/NoBooksFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/stats": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to fetch statistics about the books collection, including total books, number of authors, most popular genre, and most prolific author.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/StatsFetched"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}/downloads": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Endpoint to update the download count for a specific book identified by its ISBN.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "downloadCountBody",
+            "in": "body",
+            "description": "Download count to update for the book.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "downloadCount": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "integer"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 100
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/DownloadUpdated"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}/readingLists": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Update the reading lists count for a book identified by its ISBN.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "readingListsBody",
+            "in": "body",
+            "description": "Reading lists count to update for the book.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "inReadingLists": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "integer"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 50
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/inReadingListsUpdated"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}/review": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "description": "Update the total rating and review count directly.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "reviewUpdateBody",
+            "in": "body",
+            "description": "Details to update totalRating and totalReviews.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "totalRating": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "number"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 4.2
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "The new total rating (0 to 5)."
+                        }
+                      }
+                    },
+                    "totalReviews": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "integer"
+                        },
+                        "example": {
+                          "type": "number",
+                          "example": 100
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "The new total number of reviews (non-negative integer)."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/ReviewAdded"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/ValidationError"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/books/{isbn}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "description": "Delete a book from the catalog by ISBN.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BookDeleted"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "description": "Endpoint to update the details of a book by ISBN.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/isbnPath"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "bookBody",
+            "in": "body",
+            "description": "Updated details for the book.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Book"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "$ref": "#/responses/BookUpdated"
+          },
+          "400": {
+            "description": "Bad Request",
+            "$ref": "#/responses/InvalidISBN"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found",
+            "$ref": "#/responses/BookNotFound"
+          },
+          "409": {
+            "description": "Conflict",
+            "$ref": "#/responses/DuplicateISBN"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Book": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "example": "object"
+        },
+        "required": {
+          "type": "array",
+          "example": [
+            "isbn",
+            "title",
+            "author",
+            "publicationYear",
+            "description",
+            "language",
+            "totalPages",
+            "categories",
+            "featuredType",
+            "downloadCount",
+            "totalRating",
+            "totalReviews",
+            "inReadingLists"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "isbn": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "9788466346122"
+                }
+              }
+            },
+            "title": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "El día que se perdió la cordura"
+                }
+              }
+            },
+            "author": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "Javier Castillo"
+                }
+              }
+            },
+            "publicationYear": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 2015
+                }
+              }
+            },
+            "description": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "Centro de Boston, 24 de diciembre, un hombre camina desnudo con la cabeza decapitada de una joven..."
+                }
+              }
+            },
+            "language": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "es"
+                }
+              }
+            },
+            "totalPages": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 456
+                }
+              }
+            },
+            "categories": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "array"
+                },
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "string"
+                    },
+                    "example": {
+                      "type": "string",
+                      "example": "Fiction"
+                    }
+                  }
+                }
+              }
+            },
+            "featuredType": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "bestSeller"
+                }
+              }
+            },
+            "downloadCount": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            },
+            "totalRating": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            },
+            "totalReviews": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            },
+            "inReadingLists": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            },
+            "coverImage": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "https://covers.openlibrary.org/b/isbn/9788466346122-L.jpg"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Stats": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "example": "object"
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "totalBooks": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "number"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 500
+                }
+              }
+            },
+            "authors": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "number"
+                },
+                "example": {
+                  "type": "number",
+                  "example": 250
+                }
+              }
+            },
+            "mostPopularGenre": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "Fiction"
+                }
+              }
+            },
+            "mostProlificAuthor": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "example": {
+                  "type": "string",
+                  "example": "J.K. Rowling"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "parameters": {
+    "isbnPath": {
+      "name": "isbn",
+      "in": "path",
+      "description": "ISBN of the book. Must be in ISBN-10 or ISBN-13 format.",
+      "required": true,
+      "type": "string",
+      "format": "isbn"
+    },
+    "titleQuery": {
+      "name": "title",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "El día que se perdió la cordura"
+    },
+    "authorQuery": {
+      "name": "author",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "Javier Castillo"
+    },
+    "publicationYearQuery": {
+      "name": "publicationYear",
+      "in": "query",
+      "required": false,
+      "type": "integer",
+      "example": 2015
+    },
+    "categoryQuery": {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "Fiction"
+    },
+    "languageQuery": {
+      "name": "language",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "es"
+    },
+    "featuredTypeQuery": {
+      "name": "featuredType",
+      "in": "query",
+      "required": false,
+      "type": "string",
+      "example": "bestSeller"
+    }
+  },
+  "responses": {
+    "ServiceHealthy": {
+      "description": "Service is healthy.",
+      "schema": {
+        "type": "string",
+        "example": "OK"
+      }
+    },
+    "BookFound": {
+      "description": "Book found.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "BooksFound": {
+      "description": "Books found.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Book"
+        }
+      }
+    },
+    "BookNotFound": {
+      "description": "Book not found.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book not found"
+          }
+        }
+      }
+    },
+    "StatsFetched": {
+      "description": "Statistics fetched successfully.",
+      "schema": {
+        "$ref": "#/definitions/Stats"
+      }
+    },
+    "DownloadUpdated": {
+      "description": "Download count updated successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book download count updated successfully."
+          },
+          "updatedBook": {
+            "$ref": "#/definitions/Book"
+          }
+        }
+      }
+    },
+    "inReadingListsUpdated": {
+      "description": "Reading lists count updated successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book total reading lists updated successfully."
+          },
+          "book": {
+            "$ref": "#/definitions/Book"
+          }
+        }
+      }
+    },
+    "ReviewAdded": {
+      "description": "Review added successfully, returning the updated rating and review count.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Review added successfully."
+          },
+          "bookReview": {
+            "type": "object",
+            "properties": {
+              "isbn": {
+                "type": "string",
+                "example": "9788466346122"
+              },
+              "totalRating": {
+                "type": "number",
+                "example": 4.5
+              },
+              "totalReviews": {
+                "type": "integer",
+                "example": 10
+              }
+            }
+          }
+        }
+      }
+    },
+    "BookCreated": {
+      "description": "Book created successfully.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "BookDeleted": {
+      "description": "Book deleted successfully.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Book deleted successfully"
+          }
+        }
+      }
+    },
+    "BookUpdated": {
+      "description": "Book updated successfully.",
+      "schema": {
+        "$ref": "#/definitions/Book"
+      }
+    },
+    "NoBooksFound": {
+      "description": "No books found for the given search criteria.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "No books found for the given search criteria."
+          }
+        }
+      }
+    },
+    "NoFeaturedBooks": {
+      "description": "No featured books found.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "No featured books found."
+          }
+        }
+      }
+    },
+    "InvalidISBN": {
+      "description": "Invalid ISBN format. Must be ISBN-10 or ISBN-13.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Invalid ISBN format. Must be ISBN-10 or ISBN-13."
+          }
+        }
+      }
+    },
+    "DuplicateISBN": {
+      "description": "Conflict error. Duplicate ISBN.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Duplicate ISBN: a book with this ISBN already exists."
+          }
+        }
+      }
+    },
+    "InvalidQueryParams": {
+      "description": "Invalid query parameters provided.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Invalid query parameters provided."
+          },
+          "invalidParameters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "invalidParam1",
+              "invalidParam2"
+            ]
+          }
+        }
+      }
+    },
+    "ValidationError": {
+      "description": "Validation failed. Check the provided data.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed. Check the provided data."
+          },
+          "details": {
+            "type": "object",
+            "example": {
+              "isbn": "Invalid ISBN format"
+            }
+          }
+        }
+      }
+    },
+    "ServerError": {
+      "description": "Unexpected server error occurred.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Unexpected server error occurred."
+          },
+          "error": {
+            "type": "string",
+            "example": "InternalServerError: database connection failed."
+          }
+        }
+      }
+    }
+  }
+}

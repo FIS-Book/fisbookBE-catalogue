@@ -1,0 +1,481 @@
+# Cluster Kubernetes - Deployment BE Catalogue
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbookbe-catalogue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbookbe-catalogue
+  template:
+    metadata:
+      labels:
+        app: fisbookbe-catalogue
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbookbe-catalogue
+          image: fisbookimages.azurecr.io/fisbookbe-catalogue:latest
+          env:
+            - name: MONGO_URI_CATALOGUE
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MONGO_URI_CATALOGUE
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: BASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: JWT_SECRET
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /api/v1/books/healthz
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            httpGet:
+              path: /api/v1/books/healthz
+              port: 3000
+      imagePullSecrets:
+        - name: acr-secret
+---
+# Cluster Kubernetes - Service BE Catalogue
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbookbe-catalogue
+spec:
+  type: ClusterIP # IP assigned by the cluster
+  ports:
+    - name: http
+      targetPort: 3000
+      protocol: TCP
+      port: 3000
+  selector:
+    app: fisbookbe-catalogue
+---
+# Cluster Kubernetes - Deployment BE Users
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbookbe-users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbookbe-users
+  template:
+    metadata:
+      labels:
+        app: fisbookbe-users
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbookbe-users
+          image: fisbookimages.azurecr.io/fisbookbe-users:latest
+          env:
+            - name: MONGO_URI_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MONGO_URI_USERS
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: BASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: JWT_SECRET
+            - name: MS_READING_LIST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_READING_LIST_URL
+            - name: MS_REVIEWS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_REVIEWS_URL
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /api/v1/auth/healthz
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            httpGet:
+              path: /api/v1/auth/healthz
+              port: 3000
+      imagePullSecrets:
+        - name: acr-secret
+---
+# Cluster Kubernetes - Service BE Users
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbookbe-users
+spec:
+  type: ClusterIP # IP assigned by the cluster
+  ports:
+    - name: http
+      targetPort: 3000
+      protocol: TCP
+      port: 3000
+  selector:
+    app: fisbookbe-users
+---
+# Cluster Kubernetes - Deployment BE Reviews
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbookbe-reviews
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbookbe-reviews
+  template:
+    metadata:
+      labels:
+        app: fisbookbe-reviews
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbookbe-reviews
+          image: fisbookimages.azurecr.io/fisbookbe-reviews:latest
+          env:
+            - name: MONGO_URI_REVIEWS
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MONGO_URI_REVIEWS
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: BASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: JWT_SECRET
+            - name: MS_READING_LIST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_READING_LIST_URL
+            - name: MS_USERS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_USERS_URL
+            - name: MS_CATALOGUE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_CATALOGUE_URL            
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /api/v1/reviews/healthz
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            httpGet:
+              path: /api/v1/reviews/healthz
+              port: 3000
+      imagePullSecrets:
+        - name: acr-secret
+---
+# Cluster Kubernetes - Service BE Reviews
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbookbe-reviews
+spec:
+  type: ClusterIP # IP assigned by the cluster
+  ports:
+    - name: http
+      targetPort: 3000
+      protocol: TCP
+      port: 3000
+  selector:
+    app: fisbookbe-reviews
+---
+# Cluster Kubernetes - Deployment BE Downloads
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbookbe-downloads
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbookbe-downloads
+  template:
+    metadata:
+      labels:
+        app: fisbookbe-downloads
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbookbe-downloads
+          image: fisbookimages.azurecr.io/fisbookbe-downloads:latest
+          env:
+            - name: MONGO_URI_DOWNLOADS
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MONGO_URI_DOWNLOADS
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: BASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: JWT_SECRET
+            - name: MS_READING_LIST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MS_READING_LIST_URL
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /api/v1/read-and-download/healthz
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            httpGet:
+              path: /api/v1/read-and-download/healthz
+              port: 3000
+      imagePullSecrets:
+        - name: acr-secret
+---
+# Cluster Kubernetes - Service BE Downloads
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbookbe-downloads
+spec:
+  type: ClusterIP # IP assigned by the cluster
+  ports:
+    - name: http
+      targetPort: 3000
+      protocol: TCP
+      port: 3000
+  selector:
+    app: fisbookbe-downloads
+---
+# Cluster Kubernetes - Deployment BE Readings
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbookbe-readings
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbookbe-readings
+  template:
+    metadata:
+      labels:
+        app: fisbookbe-readings
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbookbe-readings
+          image: fisbookimages.azurecr.io/fisbookbe-readings:latest
+          env:
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: SENDGRID_API_KEY
+            - name: MONGODB_URI_READINGS
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: MONGODB_URI_READINGS
+            - name: API_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: API_VERSION
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: BASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fisbook-secrets
+                  key: JWT_SECRET
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /api/v1/readings/healthz
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            httpGet:
+              path: /api/v1/readings/healthz
+              port: 3000
+      imagePullSecrets:
+        - name: acr-secret
+---
+# Cluster Kubernetes - Service BE Reviews
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbookbe-readings
+spec:
+  type: ClusterIP # IP assigned by the cluster
+  ports:
+    - name: http
+      targetPort: 3000
+      protocol: TCP
+      port: 3000
+  selector:
+    app: fisbookbe-readings
+---
+# Cluster Kubernetes - Deployment FE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fisbook-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fisbook-frontend
+  template:
+    metadata:
+      labels:
+        app: fisbook-frontend
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: fisbook-frontend
+          image: fisbookimages.azurecr.io/fisbook-frontend:latest
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            periodSeconds: 1
+            httpGet:
+              path: /
+              port: http
+          livenessProbe:
+            periodSeconds: 1
+            httpGet:
+              path: /
+              port: http
+---
+# Cluster Kubernetes - Service BE
+apiVersion: v1
+kind: Service
+metadata:
+  name: fisbook-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      targetPort: http
+      protocol: TCP
+      port: 80
+  selector:
+    app: fisbook-frontend
+---
+# Cluster Kubernetes - Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fisbook-ingress
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbook-frontend
+                port:
+                  number: 80
+          - path: /api/v1/books
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbookbe-catalogue
+                port:
+                  number: 3000
+          - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbookbe-users
+                port:
+                  number: 3000
+          - path: /api/v1/read-and-download
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbookbe-downloads
+                port:
+                  number: 3000
+          - path: /api/v1/reviews
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbookbe-reviews
+                port:
+                  number: 3000
+          - path: /api/v1/readings
+            pathType: Prefix
+            backend:
+              service:
+                name: fisbookbe-readings
+                port:
+                  number: 3000
